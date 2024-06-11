@@ -8,3 +8,13 @@ venv/*
 
 logs/
 logs/*
+
+
+build
+build/*
+
+dist
+dist/*
+
+whatsloon.egg-info
+whatsloon.egg-info/*
