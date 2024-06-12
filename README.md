@@ -1,7 +1,7 @@
 # whatsloon
 
 ## Overview:
-Whatsloon is a Python package that simplifies the process of integrating WhatsApp messaging functionality into applications using the WhatsApp Business API. With Whatsloon, developers can easily send various types of messages via WhatsApp, including text messages, multimedia messages, interactive messages, and more.
+whatsloon is a Python package that simplifies the process of integrating WhatsApp messaging functionality into applications using the WhatsApp Business API. With Whatsloon, developers can easily send various types of messages via WhatsApp, including text messages, multimedia messages, interactive messages, and more.
 
 ## Features:
 - Send Text Messages: Send plain text messages to WhatsApp recipients.
@@ -23,12 +23,11 @@ pip install whatsloon
 
 ## Usage Example:
 ```
-from whatsloon import WhatsAppClient
+from whatsloon.message import WhatsAppClient
 
 # Initialize WhatsApp client
 client = WhatsAppClient(
     access_token="YOUR_API_KEY", 
-    base_url="API_BASE_URL",
     mobile_number_id="MOBILE_NUMBER_ID",
     country_code="RECIPIENT_COUNTRY_CODE",
     recipient_mobile_number="RECIPIENT_MOBILE_NUMBER",

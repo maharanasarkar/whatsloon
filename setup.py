@@ -6,7 +6,7 @@ load_dotenv()
 
 setup(
     name="whatsloon",
-    version="1.0.2",
+    version="1.1.1",
     packages=find_packages(),
     author=os.environ.get("AUTHOR_NAME"),
     author_email=os.environ.get("AUTHOR_EMAIL"),

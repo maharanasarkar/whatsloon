@@ -1,7 +1,16 @@
 import requests
 from typing import Dict, Any, Optional, List
-from logger.default_logger import logger
+import logging
 
+logging.basicConfig(
+    level=logging.INFO,                  
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    filename='app.log',
+    filemode='w'
+)
+
+logger = logging.getLogger(__name__)
 
 class WhatsAppCloudAPI:
     """
