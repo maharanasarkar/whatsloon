@@ -33,10 +33,10 @@ def test_build_flow_payload_with_all_fields():
         flow_message_version="4", body_text="Body", header={"type": "text", "text": "Header"},
         footer_text="Footer", flow_action_payload={"key": "value"}
     )
-    assert payload["interactive"]["header"]["text"] == "Header"
+    assert payload["interactive"]["header"] == {"type": "text", "text": "Header"}
     assert payload["interactive"]["body"]["text"] == "Body"
     assert payload["interactive"]["footer"]["text"] == "Footer"
-    assert payload["interactive"]["action"]["parameters"]["key"] == "value"
+    assert payload["interactive"]["action"]["parameters"]["flow_action_payload"] == {"key": "value"}
 
 def test_build_flow_payload_missing_token():
     """
