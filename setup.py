@@ -10,7 +10,7 @@ setup(
     url="https://github.com/maharanasarkar/whatsloon",
     author="Maharana Sarkar",
     author_email="maharana.sarkar2000@gmail.com",
-    description="A user-friendly Python wrapper for the WhatsApp Cloud API. Easily integrate WhatsApp messaging into your applications and enhance user engagement with streamlined workflows.",
+    description="A user-friendly Python wrapper for the WhatsApp Cloud API.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords=[
