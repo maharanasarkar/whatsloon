@@ -18,7 +18,7 @@ from .location_request import LocationRequestSender
 from .location import LocationSender
 from .reaction import ReactionSender
 from .read_receipts import ReadMark
-from .reply_buttons import ReplyButtonsSender
+from .reply_buttons import ReplyButtonSender
 from .sticker import StickerSender
 from .template import TemplateSender
 from .text import TextSender
@@ -42,7 +42,7 @@ __all__ = [
     "LocationSender",
     "ReactionSender",
     "ReadMark",
-    "ReplyButtonsSender",
+    "ReplyButtonSender",
     "StickerSender",
     "TemplateSender",
     "TextSender",
@@ -65,7 +65,7 @@ class WhatsAppCloudAPIClient(
     LocationSender,
     ReactionSender,
     ReadMark,
-    ReplyButtonsSender,
+    ReplyButtonSender,
     StickerSender,
     TemplateSender,
     TextSender,
