@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
 
+with open("README.md", encoding="utf-8") as f:
+    long_description = f.read()
 
 setup(
     name="whatsloon",
@@ -9,7 +11,7 @@ setup(
     author="Maharana Sarkar",
     author_email="maharana.sarkar2000@gmail.com",
     description="A user-friendly Python wrapper for the WhatsApp Cloud API. Easily integrate WhatsApp messaging into your applications and enhance user engagement with streamlined workflows.",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     keywords=[
         "whatsloon",
