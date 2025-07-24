@@ -27,15 +27,12 @@ class ContextualReply:
     ) -> Dict[str, Any]:
         """
         Build the payload for sending a contextual reply message.
-
-        Args:
-            reply_to_message_id (str): The ID of the message to reply to.
-            message_type (str): The type of message to send (e.g., 'text', 'image', etc.).
-            message_content (dict): The content of the message (e.g., for text: {"body": "..."}).
-
-        Returns:
-            Dict[str, Any]: The payload dictionary for the WhatsApp API request.
+        Raises TypeError if required arguments are missing.
         """
+        if not reply_to_message_id:
+            raise TypeError("reply_to_message_id is required")
+        if not message_type:
+            raise TypeError("message_type is required")
         payload = {
             "messaging_product": "whatsapp",
             "recipient_type": "individual",

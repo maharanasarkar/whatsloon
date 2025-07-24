@@ -39,8 +39,8 @@ def test_build_address_payload_with_all_fields():
         validation_errors={"in_pin_code": "Invalid pin code"},
         saved_addresses=[{"id": "1", "address": "Old Address"}]
     )
-    assert payload["interactive"]["header"] == "Header text"
-    assert payload["interactive"]["footer"] == "Footer text"
+    assert payload["interactive"]["header"] == {"type": "text", "text": "Header text"}
+    assert payload["interactive"]["footer"] == {"text": "Footer text"}
     params = payload["interactive"]["action"]["parameters"]
     assert params["country"] == "US"
     assert params["values"]["name"] == "John"
