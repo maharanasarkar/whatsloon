@@ -1,8 +1,8 @@
 import pytest
-from whatsloon.text import TextMessageSender
+from whatsloon.text import TextSender
 
 
-class DummyClient(TextMessageSender):
+class DummyClient(TextSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
