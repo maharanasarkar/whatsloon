@@ -40,7 +40,7 @@ def test_build_address_payload_with_all_fields():
         saved_addresses=[{"id": "1", "address": "Old Address"}]
     )
     assert payload["interactive"]["header"] == {"type": "text", "text": "Header text"}
-    assert payload["interactive"]["footer"] == {"text": "Footer text"}
+    assert payload["interactive"]["footer"] == {"text": "Footer text", "type": "text"}
     params = payload["interactive"]["action"]["parameters"]
     assert params["country"] == "US"
     assert params["values"]["name"] == "John"
