@@ -27,4 +27,7 @@ setup(
         "Intended Audience :: Developers",
     ],
     python_requires=">=3.9.6",
+    install_requires=[
+        "httpx"
+    ],
 )

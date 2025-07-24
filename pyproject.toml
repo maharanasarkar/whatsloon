@@ -26,7 +26,8 @@ classifiers = [
   "Intended Audience :: Developers"
 ]
 dependencies = [
-  "requests"
+  "requests",
+  "httpx"
 ]
 
 [tool.setuptools.packages.find]
