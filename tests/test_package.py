@@ -78,12 +78,12 @@ def test_dummy_client_integration():
     from whatsloon.contact import ContactSender
     from whatsloon.document import DocumentSender
     from whatsloon.image import ImageSender
-    from whatsloon.text import TextMessageSender
+    from whatsloon.text import TextSender
 
     class DummyClient(
         FlowSender, ListSender, ReplyButtonSender, LocationSender, LocationRequestSender,
         ReactionSender, StickerSender, TemplateSender, VideoSender, ReadMark, ContextualReply,
-        TypingIndicator, AddressSender, AudioSender, WhatsAppBaseClient, ContactSender, DocumentSender, ImageSender, TextMessageSender
+        TypingIndicator, AddressSender, AudioSender, WhatsAppBaseClient, ContactSender, DocumentSender, ImageSender, TextSender
     ):
         def __init__(self):
             WhatsAppBaseClient.__init__(

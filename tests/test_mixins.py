@@ -6,7 +6,7 @@ from whatsloon.base import WhatsAppBaseClient
 from whatsloon.contact import ContactSender
 from whatsloon.document import DocumentSender
 from whatsloon.image import ImageSender
-from whatsloon.text import TextMessageSender
+from whatsloon.text import TextSender
 from whatsloon.flow import FlowSender
 from whatsloon.list import ListSender
 from whatsloon.reply_buttons import ReplyButtonSender
@@ -355,12 +355,12 @@ def test_image_sender_payload():
 
 def test_text_message_sender_payload():
     """
-    Test TextMessageSender _build_text_payload with body.
+    Test TextSender _build_text_payload with body.
     Input: body.
     Output: Payload contains 'text' with correct 'body'.
     """
 
-    class Dummy(TextMessageSender):
+    class Dummy(TextSender):
         def __init__(self):
             self.recipient_to_send = "1234567890"
 
