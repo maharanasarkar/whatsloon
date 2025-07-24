@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=76.1.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "whatsloon"
+version = "2.0.1"
+description = "A user-friendly Python wrapper for the WhatsApp Cloud API. Easily integrate WhatsApp messaging into your applications and enhance user engagement with streamlined workflows."
+readme = "README.md"
+requires-python = ">=3.9.6"
+license = {text = "MIT"}
+authors = [
+  { name = "Maharana Sarkar", email = "maharana.sarkar2000@gmail.com" }
+]
+keywords = [
+  "whatsloon",
+  "whatsloon-library",
+  "WhatsApp API in Python",
+  "whatsloon-python",
+  "WhatsApp Cloud API Wrapper"
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers"
+]
+dependencies = [
+  "requests"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["whatsloon*"]
+
+[tool.setuptools]
+include-package-data = true
