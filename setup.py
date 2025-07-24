@@ -5,7 +5,7 @@ with open("README.md", encoding="utf-8") as f:
 
 setup(
     name="whatsloon",
-    version="2.0.2",
+    version="2.0.3",
     packages=find_packages(),
     url="https://github.com/maharanasarkar/whatsloon",
     author="Maharana Sarkar",
@@ -27,4 +27,7 @@ setup(
         "Intended Audience :: Developers",
     ],
     python_requires=">=3.9.6",
+    install_requires=[
+        "httpx"
+    ],
 )

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "whatsloon"
-version = "2.0.2"
+version = "2.0.3"
 description = "A user-friendly Python wrapper for the WhatsApp Cloud API. Easily integrate WhatsApp messaging into your applications and enhance user engagement with streamlined workflows."
 readme = "README.md"
 requires-python = ">=3.9.6"
@@ -26,7 +26,8 @@ classifiers = [
   "Intended Audience :: Developers"
 ]
 dependencies = [
-  "requests"
+  "requests",
+  "httpx"
 ]
 
 [tool.setuptools.packages.find]
