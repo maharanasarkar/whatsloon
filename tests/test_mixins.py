@@ -297,7 +297,7 @@ def test_base_client_init():
     """
     client = WhatsAppBaseClient(
         access_token="token",
-        mobile_number_id="id",
+        phone_number_id="id",
         recipient_country_code="91",
         recipient_mobile_number="9876543210",
     )

@@ -9,7 +9,7 @@ def test_valid_initialization():
     """
     client = WhatsAppBaseClient(
         access_token="token",
-        mobile_number_id="1234567890",
+        phone_number_id="1234567890",
         recipient_mobile_number="9876543210",
         recipient_country_code="91",
         api_version="v19.0"
@@ -26,7 +26,7 @@ def test_valid_initialization_with_plus():
     """
     client = WhatsAppBaseClient(
         access_token="token",
-        mobile_number_id="1234567890",
+        phone_number_id="1234567890",
         recipient_mobile_number="+9876543210",
         recipient_country_code="+91",
         api_version="v19.0"
@@ -41,7 +41,7 @@ def test_valid_initialization_no_country_code():
     """
     client = WhatsAppBaseClient(
         access_token="token",
-        mobile_number_id="1234567890",
+        phone_number_id="1234567890",
         recipient_mobile_number="9876543210",
         api_version="v19.0"
     )
@@ -56,20 +56,20 @@ def test_invalid_access_token():
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
             access_token=" ",
-            mobile_number_id="1234567890",
+            phone_number_id="1234567890",
             recipient_mobile_number="9876543210"
         )
 
-def test_invalid_mobile_number_id():
+def test_invalid_phone_number_id():
     """
-    Test invalid mobile_number_id (empty string).
-    Input: mobile_number_id is empty.
+    Test invalid phone_number_id (empty string).
+    Input: phone_number_id is empty.
     Output: Raises ValueError.
     """
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
             access_token="token",
-            mobile_number_id=" ",
+            phone_number_id=" ",
             recipient_mobile_number="9876543210"
         )
 
@@ -82,7 +82,7 @@ def test_invalid_mobile_number_type():
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
             access_token="token",
-            mobile_number_id="1234567890",
+            phone_number_id="1234567890",
             recipient_mobile_number="notanumber"
         )
 
@@ -95,7 +95,7 @@ def test_invalid_mobile_number_length():
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
             access_token="token",
-            mobile_number_id="1234567890",
+            phone_number_id="1234567890",
             recipient_mobile_number="123"
         )
 
@@ -108,7 +108,7 @@ def test_invalid_country_code_type():
     with pytest.raises(TypeError):
         WhatsAppBaseClient(
             access_token="token",
-            mobile_number_id="1234567890",
+            phone_number_id="1234567890",
             recipient_mobile_number="9876543210",
             recipient_country_code=123
         )
@@ -122,7 +122,7 @@ def test_invalid_country_code_format():
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
             access_token="token",
-            mobile_number_id="1234567890",
+            phone_number_id="1234567890",
             recipient_mobile_number="9876543210",
             recipient_country_code="abc"
         )
@@ -136,7 +136,7 @@ def test_invalid_api_version():
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
             access_token="token",
-            mobile_number_id="1234567890",
+            phone_number_id="1234567890",
             recipient_mobile_number="9876543210",
             api_version=" "
         )
@@ -149,7 +149,7 @@ def test_base_client_init():
     """
     client = WhatsAppBaseClient(
         access_token="token",
-        mobile_number_id="id",
+        phone_number_id="id",
         recipient_country_code="91",
         recipient_mobile_number="9876543210",
     )
@@ -165,7 +165,7 @@ def test_base_client_missing_token():
     """
     try:
         WhatsAppBaseClient(
-            mobile_number_id="id",
+            phone_number_id="id",
             recipient_country_code="91",
             recipient_mobile_number="9876543210",
         )
@@ -174,10 +174,10 @@ def test_base_client_missing_token():
     else:
         assert False, "TypeError not raised for missing access_token"
 
-def test_base_client_missing_mobile_number_id():
+def test_base_client_missing_phone_number_id():
     """
-    Test missing mobile_number_id argument.
-    Input: No mobile_number_id.
+    Test missing phone_number_id argument.
+    Input: No phone_number_id.
     Output: Should raise TypeError.
     """
     try:
@@ -189,7 +189,7 @@ def test_base_client_missing_mobile_number_id():
     except TypeError:
         pass
     else:
-        assert False, "TypeError not raised for missing mobile_number_id"
+        assert False, "TypeError not raised for missing phone_number_id"
 
 def test_base_client_invalid_country_code():
     """
@@ -200,7 +200,7 @@ def test_base_client_invalid_country_code():
     try:
         client = WhatsAppBaseClient(
             access_token="token",
-            mobile_number_id="id",
+            phone_number_id="id",
             recipient_country_code="XX",
             recipient_mobile_number="9876543210",
         )
@@ -217,7 +217,7 @@ def test_base_client_none_country_code():
     """
     client = WhatsAppBaseClient(
         access_token="token",
-        mobile_number_id="id",
+        phone_number_id="id",
         recipient_country_code=None,
         recipient_mobile_number="9876543210",
     )
