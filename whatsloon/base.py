@@ -12,7 +12,7 @@ class WhatsAppBaseClient:
     Attributes:
         access_token (str): Access token for the WhatsApp Cloud API.
         phone_number_id (str): Phone number ID for the WhatsApp Cloud API.
-        recipient_phone_number (str): Recipient's phone number.
+        recipient_mobile_number (str): Recipient's mobile number.
         recipient_to_send (str): Full recipient number including country code.
         country_code (str): Country code of the recipient.
         api_version (str): Version of the WhatsApp Cloud API to use.
