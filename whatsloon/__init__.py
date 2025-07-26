@@ -14,6 +14,7 @@ from .cta import CTASender
 from .document import DocumentSender
 from .flow import FlowSender
 from .image import ImageSender
+from .list import ListSender
 from .location_request import LocationRequestSender
 from .location import LocationSender
 from .reaction import ReactionSender
@@ -38,6 +39,7 @@ __all__ = [
     "DocumentSender",
     "FlowSender",
     "ImageSender",
+    "ListSender",
     "LocationRequestSender",
     "LocationSender",
     "ReactionSender",
@@ -61,6 +63,7 @@ class WhatsAppCloudAPIClient(
     DocumentSender,
     FlowSender,
     ImageSender,
+    ListSender,
     LocationRequestSender,
     LocationSender,
     ReactionSender,
