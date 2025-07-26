@@ -49,7 +49,7 @@ from whatsloon import WhatsAppCloudAPIClient
 
 client = WhatsAppCloudAPIClient(
     access_token="YOUR_API_KEY",
-    mobile_number_id="MOBILE_NUMBER_ID",
+    phone_number_id="phone_number_id",
     recipient_country_code="91",
     recipient_mobile_number="9876543210",
 )
@@ -86,7 +86,7 @@ class MyWhatsAppClient(WhatsAppBaseClient, TextSender, ImageSender):
 
 client = MyWhatsAppClient(
     access_token="YOUR_API_KEY",
-    mobile_number_id="MOBILE_NUMBER_ID",
+    phone_number_id="phone_number_id",
     recipient_country_code="91",
     recipient_mobile_number="9876543210",
 )
@@ -106,7 +106,7 @@ class SimpleClient(WhatsAppBaseClient):
 
 client = SimpleClient(
     access_token="YOUR_API_KEY",
-    mobile_number_id="MOBILE_NUMBER_ID",
+    phone_number_id="phone_number_id",
     recipient_country_code="91",
     recipient_mobile_number="9876543210",
 )
