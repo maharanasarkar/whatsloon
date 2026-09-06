@@ -216,6 +216,7 @@ class WhatsApp:
         )
         self.graph = GraphClient(self.transport, phone_number_id)
         from whatsloon.business.service import BusinessService
+        from whatsloon.calls.service import CallService
         from whatsloon.groups.service import GroupService
         from whatsloon.media.service import MediaService
         from whatsloon.messages.service import MessageService
@@ -226,6 +227,7 @@ class WhatsApp:
         self.templates = TemplateService(self.transport)
         self.business = BusinessService(self.transport)
         self.groups = GroupService(self.transport, phone_number_id)
+        self.calls = CallService(self.transport, phone_number_id)
         self.credentials = Credentials(
             access_token=access_token,
             phone_number_id=phone_number_id,
