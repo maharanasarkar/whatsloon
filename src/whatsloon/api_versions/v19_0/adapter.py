@@ -31,12 +31,10 @@ class V19Adapter(VersionAdapter):
         Returns:
             Version-specific JSON payload.
         """
-        return {
-            "messaging_product": "whatsapp",
-            "to": to,
-            "type": "text",
-            "text": {"body": body, "preview_url": preview_url},
-        }
+        from whatsloon.messages.models import TextMessage
+        from whatsloon.messages.serializers import serialize_text
+
+        return serialize_text(to, TextMessage(body=body, preview_url=preview_url))
 
 
 __all__ = ["V19Adapter"]
