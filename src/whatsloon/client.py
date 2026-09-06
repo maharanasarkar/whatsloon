@@ -215,6 +215,9 @@ class WhatsApp:
             user_agent=self.config.user_agent,
         )
         self.graph = GraphClient(self.transport, phone_number_id)
+        from whatsloon.messages.service import MessageService
+
+        self.messages = MessageService(self.adapter, self.transport, phone_number_id)
         self.credentials = Credentials(
             access_token=access_token,
             phone_number_id=phone_number_id,

@@ -30,7 +30,7 @@ jobs:
           cache: pip
       - run: pip install -U pip mypy .[dev]
       # Legacy 2.x mixins are excluded until Phase 2 migrates them; new core is strict.
-      - run: mypy src/whatsloon/exceptions.py src/whatsloon/client.py src/whatsloon/async_client.py src/whatsloon/compat.py src/whatsloon/config src/whatsloon/auth src/whatsloon/transport src/whatsloon/api_versions src/whatsloon/persistence src/whatsloon/admin
+      - run: mypy src/whatsloon/exceptions.py src/whatsloon/client.py src/whatsloon/async_client.py src/whatsloon/compat.py src/whatsloon/config src/whatsloon/auth src/whatsloon/transport src/whatsloon/api_versions src/whatsloon/persistence src/whatsloon/admin src/whatsloon/messages
 
   test:
     name: Test py${{ matrix.python-version }}
