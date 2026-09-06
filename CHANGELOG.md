@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-09-06
+
 ### Added
 
 - v3 typed messaging: Pydantic models, builders, and canonical serializers for every 2.x sender type with legacy parity tests.
@@ -34,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Modernized packaging to `pyproject.toml` with typed package and optional `test`, `dev`, and `docs` extras.
 - Hardened `WhatsAppBaseClient` validation and normalization.
+- **Breaking:** package moved to `src/` layout; version 3.0.0. The 2.x API remains available (top-level classes plus `whatsloon.compat` with deprecation warnings); per-send `to=` replaces pinned recipients in new code.
 
-[Unreleased]: https://github.com/maharanasarkar/whatsloon/compare/v2.0.5...HEAD
+[Unreleased]: https://github.com/maharanasarkar/whatsloon/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/maharanasarkar/whatsloon/compare/v2.0.5...v3.0.0
 [2.0.5]: https://github.com/maharanasarkar/whatsloon/releases/tag/v2.0.5
