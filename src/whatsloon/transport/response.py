@@ -13,6 +13,7 @@ class Response(BaseModel):
     Attributes:
         status_code: HTTP status code.
         data: Decoded JSON body (empty dict when absent).
+        content: Raw response bytes for non-JSON payloads such as media.
         headers: Response headers.
         trace_id: Meta trace/request ID when supplied.
         correlation_id: Echoed request correlation ID.
@@ -22,6 +23,7 @@ class Response(BaseModel):
 
     status_code: int
     data: dict[str, Any] = Field(default_factory=dict)
+    content: bytes = b""
     headers: dict[str, str] = Field(default_factory=dict)
     trace_id: Optional[str] = None
     correlation_id: str = ""

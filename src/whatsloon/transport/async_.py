@@ -148,6 +148,8 @@ class AsyncTransport(BaseTransport):
                 pool=self.timeout.pool,
             )
         headers = self._headers(request.headers)
+        if request.files is not None:
+            headers.pop("Content-Type", None)
         logger.debug(
             "%s %s headers=%s correlation_id=%s",
             request.method,
@@ -161,6 +163,8 @@ class AsyncTransport(BaseTransport):
                 self._url(request.path),
                 params=request.params or None,
                 json=request.json_body,
+                files=request.files,
+                data=request.form_data or None,
                 headers=headers,
                 timeout=timeout,
             )
@@ -173,6 +177,7 @@ class AsyncTransport(BaseTransport):
         response = Response(
             status_code=raw.status_code,
             data=data if isinstance(data, dict) else {},
+            content=raw.content,
             headers=dict(raw.headers),
             correlation_id=request.correlation_id,
         )

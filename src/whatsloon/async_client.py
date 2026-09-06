@@ -118,9 +118,11 @@ class AsyncWhatsApp:
             user_agent=self.config.user_agent,
         )
         self.graph = AsyncGraphClient(self.transport, phone_number_id)
+        from whatsloon.media.service import AsyncMediaService
         from whatsloon.messages.service import AsyncMessageService
 
         self.messages = AsyncMessageService(self.adapter, self.transport, phone_number_id)
+        self.media = AsyncMediaService(self.transport, phone_number_id)
         self.credentials = Credentials(
             access_token=access_token,
             phone_number_id=phone_number_id,
