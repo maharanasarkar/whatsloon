@@ -1,49 +1,34 @@
 <div align="center">
   <h1>whatsloon</h1>
-  <p>A Python wrapper facilitating seamless integration with the <a href="https://developers.facebook.com/docs/whatsapp/cloud-api">WhatsApp Cloud API</a>. Streamline your messaging workflows and enhance user engagement with this efficient toolkit.
-  </p>
-  <a href="https://pepy.tech/projects/whatsloon"><img src="https://static.pepy.tech/badge/whatsloon" alt="PyPI Downloads"></a>
-  <a href="https://pepy.tech/projects/whatsloon"><img src="https://static.pepy.tech/badge/whatsloon/month" alt="PyPI Downloads"></a>
-  <a href="https://pepy.tech/projects/whatsloon"><img src="https://static.pepy.tech/badge/whatsloon/week" alt="PyPI Downloads"></a>
+  <p>Python SDK for the <a href="https://developers.facebook.com/docs/whatsapp/cloud-api">WhatsApp Cloud API</a> — sync + async, typed, tested.</p>
+  <a href="https://pypi.org/project/whatsloon/"><img src="https://img.shields.io/pypi/v/whatsloon" alt="PyPI version"></a>
+  <a href="https://github.com/maharanasarkar/whatsloon/actions/workflows/ci.yml"><img src="https://github.com/maharanasarkar/whatsloon/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://codecov.io/gh/maharanasarkar/whatsloon"><img src="https://codecov.io/gh/maharanasarkar/whatsloon/branch/main/graph/badge.svg" alt="Coverage"></a>
+  <a href="https://maharanasarkar.github.io/whatsloon/"><img src="https://img.shields.io/badge/docs-mkdocs-blue" alt="Docs"></a>
+  <a href="https://pypistats.org/packages/whatsloon"><img src="https://img.shields.io/pypi/dm/whatsloon" alt="Downloads"></a>
+  <a href="https://github.com/maharanasarkar/whatsloon/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/whatsloon" alt="License: MIT"></a>
+  <img src="https://img.shields.io/pypi/pyversions/whatsloon" alt="Python versions">
 </div>
 
-
 ## Overview
-whatsloon is a robust Python SDK for the WhatsApp Cloud API. It provides a comprehensive set of mixin classes and utilities to send all supported WhatsApp message types, including text, media, interactive, template, location, reaction, sticker, and more. The package is designed for both synchronous and asynchronous workflows, with strong validation and error handling.
 
+`whatsloon` wraps the WhatsApp Cloud API (`graph.facebook.com`) with composable mixins for every message type: text, image, video, audio, document, sticker, reaction, location, contacts, templates, interactive lists / reply buttons / CTA / flows, typing indicators, and read receipts.
 
-## Features
-- Send Text, Image, Video, Audio, and Document messages
-- Send Interactive messages: Lists, Reply Buttons, Flows, CTA buttons
-- Send Location and Location Request messages
-- Send Contact and Address messages
-- Send Template messages (with components)
-- Send Stickers and Reactions
-- Send Typing Indicators
-- Mark messages as Read
-- Robust validation for API limits (e.g., button/section/row limits)
-- Both synchronous and asynchronous support (requests and httpx)
-- Clear error handling and logging
-
-
-## Key Components
-- Mixin Classes: Each message type (text, image, video, audio, document, list, flow, reply buttons, template, sticker, reaction, location, location request, contact, address, typing indicator, read receipt) is implemented as a robust, reusable mixin class.
-- WhatsAppBaseClient: Easily compose your own client by combining mixins for only the features you need.
-- Validation: All payload builders validate API limits and required fields.
-- Async & Sync: All senders support both synchronous (requests) and asynchronous (httpx) usage.
-
+- Sync via `requests`, async via `httpx`
+- Validated payload builders with WhatsApp API limits
+- `{"success": bool, "data" | "error"}` result shape + `logging`
+- Full test suite, typed package (`py.typed`), docs on GitHub Pages
 
 ## Installation
+
 ```sh
 pip install whatsloon
 ```
 
+Requires Python >=3.9.
 
+## Quickstart
 
-## Usage Examples
-
-
-### 1. Using WhatsAppCloudAPIClient (All Features, Easiest)
 ```python
 from whatsloon import WhatsAppCloudAPIClient
 
@@ -54,125 +39,78 @@ client = WhatsAppCloudAPIClient(
     recipient_mobile_number="9876543210",
 )
 
-# Synchronous usage
 result = client.send_text_message("Hello, world!", preview_url=True)
 print(result)
-
-# Asynchronous usage
-import asyncio
-async def main():
-    result = await client.async_send_text_message("Hello async!", preview_url=True)
-    print(result)
-asyncio.run(main())
-
-# Send an image (sync)
-result = client.send_image_message(media_id="MEDIA_ID", caption="A photo")
-print(result)
-
-# Send an image (async)
-async def main_img():
-    result = await client.async_send_image_message(media_id="MEDIA_ID", caption="Async photo")
-    print(result)
-asyncio.run(main_img())
 ```
 
-### 2. Composing Your Own Client (Selected Features Only)
+Async:
+
 ```python
-# Import mixins directly from the package root
+import asyncio
+from whatsloon import WhatsAppCloudAPIClient
+
+async def main():
+    client = WhatsAppCloudAPIClient(
+        access_token="YOUR_API_KEY",
+        phone_number_id="phone_number_id",
+        recipient_country_code="91",
+        recipient_mobile_number="9876543210",
+    )
+    print(await client.async_send_text_message("Hello async!"))
+
+asyncio.run(main())
+```
+
+Custom client with only needed features:
+
+```python
 from whatsloon import WhatsAppBaseClient, TextSender, ImageSender
 
-class MyWhatsAppClient(WhatsAppBaseClient, TextSender, ImageSender):
+class MyClient(WhatsAppBaseClient, TextSender, ImageSender):
     pass
-
-client = MyWhatsAppClient(
-    access_token="YOUR_API_KEY",
-    phone_number_id="phone_number_id",
-    recipient_country_code="91",
-    recipient_mobile_number="9876543210",
-)
-
-# Use only the features you mix in
-result = client.send_text_message("Hello, world!", preview_url=True)
-print(result)
 ```
 
+See [`docs/quickstart.md`](docs/quickstart.md), [`docs/usage.md`](docs/usage.md), and [`examples/`](examples/) for more.
 
-### 3. Without Mixins (Direct Usage)
-```python
-from whatsloon import WhatsAppBaseClient
+Full docs: https://maharanasarkar.github.io/whatsloon/
 
-class SimpleClient(WhatsAppBaseClient):
-    pass
+## Features
 
-client = SimpleClient(
-    access_token="YOUR_API_KEY",
-    phone_number_id="phone_number_id",
-    recipient_country_code="91",
-    recipient_mobile_number="9876543210",
-)
+- Text, image, video, audio, document, sticker
+- Interactive: lists, reply buttons, CTA, flows
+- Location + location request, contacts, address
+- Templates with components, reactions, typing indicators, read receipts
+- Sync + async for every sender
 
-# You can use the generic send_message method for custom payloads:
-payload = {
-    "type": "text",
-    "text": {"body": "Hello from custom payload!"}
-}
-result = client.send_message(payload)
-print(result)
+## Development
 
-# Async version
-import asyncio
-async def main():
-    result = await client.async_send_message(payload)
-    print(result)
-asyncio.run(main())
+```sh
+git clone https://github.com/maharanasarkar/whatsloon.git
+cd whatsloon
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+pre-commit install
+pytest
+ruff check .
+ruff format --check .
+mypy whatsloon
+python -m build
 ```
 
+See [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md).
 
 ## Testing
-whatsloon includes comprehensive tests for all mixins, message types, and integration scenarios.
 
-- **Test Dependencies:**
-  - Requires `pytest` (and optionally `pytest-asyncio` for async tests)
-  - Install with: `pip install -r requirements.txt` (if provided) or `pip install pytest pytest-asyncio`
+```sh
+pip install -e ".[test]"
+pytest
+pytest --cov=whatsloon tests/
+```
 
-- **Running All Tests:**
-  ```sh
-  pytest tests/
-  ```
+## Changelog
 
-- **Running a Specific Test File:**
-  ```sh
-  pytest tests/test_text.py
-  ```
+See [CHANGELOG.md](CHANGELOG.md). Releases are cut from tags `v*` via Trusted Publishing to PyPI.
 
-- **Test Coverage:**
-  To check coverage (if `pytest-cov` is installed):
-  ```sh
-  pytest --cov=whatsloon tests/
-  ```
+## License
 
-- **Contributing Tests:**
-  - Add new tests in the `tests/` directory, following the pattern `test_<module>.py`.
-  - Each test function should include a docstring explaining its purpose and expected input/output.
-  - Edge cases and error handling are strongly encouraged.
-
-
-## Contributing
-
-Contributions are welcome! To contribute to whatsloon:
-
-- **Bug Reports & Feature Requests:**
-  - Please use the [GitHub Issues](https://github.com/maharanasarkar/whatsloon/issues) page to report bugs or suggest features.
-
-- **Pull Requests:**
-  - Fork the repository and create a new branch for your feature or fix.
-  - Ensure your code follows the existing style and includes type hints and docstrings.
-  - Add or update tests as appropriate.
-  - Run all tests locally with `pytest` before submitting.
-  - Submit a pull request with a clear description of your changes.
-
-- **Code Style:**
-  - We recommend using `black` for formatting and `flake8` for linting.
-  - All public APIs should have type hints and Google-style docstrings.
-
-Thank you for helping improve whatsloon!
+MIT — see [LICENSE](LICENSE).
