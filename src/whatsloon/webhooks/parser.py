@@ -191,21 +191,6 @@ def _parse_call(call: Any, *, api_version: str) -> NormalizedEvent:
         sdp_type=str(session.get("sdp_type", "")),
         raw=call,
     )
-    kind = str(message.get("type", ""))
-    text_body: Optional[str] = None
-    text = message.get("text")
-    if isinstance(text, dict) and isinstance(text.get("body"), str):
-        text_body = text["body"]
-    return WebhookMessageReceived(
-        api_version=api_version,
-        message_id=str(message.get("id", "")),
-        sender=str(message.get("from", "")),
-        recipient_phone_id=phone_id,
-        timestamp=str(message.get("timestamp", "")),
-        message_type=kind,
-        text_body=text_body,
-        raw=message,
-    )
 
 
 def _parse_status(status: Any, *, api_version: str) -> NormalizedEvent:

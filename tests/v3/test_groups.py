@@ -8,7 +8,7 @@ from whatsloon.groups.service import GroupService
 from whatsloon.messages.models import OutboundMessage, PinMessage, TextMessage
 from whatsloon.messages.serializers import serialize_envelope
 from whatsloon.transport.sync import SyncTransport
-from whatsloon.webhooks.events import WebhookCallEvent
+from whatsloon.webhooks.events import WebhookCallEvent, WebhookMessageReceived
 from whatsloon.webhooks.parser import parse_body
 
 GROUP_ID = "Y2FwaV9ncm91cDoxNzA1NTU1MDEzOToxMjAzNjM0MDQ2OTQyMzM4MjAZD"
@@ -54,7 +54,8 @@ def test_group_lifecycle(monkeypatch):
     }
     service, calls = _service(monkeypatch, routes)
     created = service.create_group(GroupCreate(subject="Team"))
-    assert created.id == GROUP_ID and created.invite_link.startswith("https://")
+    assert created.id == GROUP_ID
+    assert (created.invite_link or "").startswith("https://")
     assert service.list_groups()[0].subject == "Team"
     assert service.get_group(GROUP_ID).id == GROUP_ID
     assert service.update_group(GROUP_ID, subject="Renamed").subject == "Renamed"
@@ -116,7 +117,9 @@ def test_group_message_carries_group_id_and_bsuid():
 
     raw = (Path("tests/fixtures/webhooks/message_received.json")).read_bytes()
     events = parse_body(raw)
-    assert events[0].group_id == ""
+    first = events[0]
+    assert isinstance(first, WebhookMessageReceived)
+    assert first.group_id == ""
     grouped = {
         "entry": [
             {
@@ -146,6 +149,23 @@ def test_group_message_carries_group_id_and_bsuid():
     import json
 
     events = parse_body(json.dumps(grouped).encode())
-    assert events[0].group_id == GROUP_ID
-    assert events[0].user_id == "bsuid-1"
-    assert events[0].parent_user_id == "p-1"
+    grouped_event = events[0]
+    assert isinstance(grouped_event, WebhookMessageReceived)
+    assert grouped_event.group_id == GROUP_ID
+    assert grouped_event.user_id == "bsuid-1"
+    assert grouped_event.parent_user_id == "p-1"
+
+
+def test_direct_send_tracking_passthrough():
+    """Tracking data passes through to the wire payload for callbacks."""
+    from whatsloon.messages.serializers import serialize_envelope
+
+    envelope = OutboundMessage(
+        to="919876543210",
+        content=TextMessage(body="Hi"),
+        biz_opaque_callback_data="campaign-42",
+    )
+    payload = serialize_envelope(envelope)
+    assert payload["biz_opaque_callback_data"] == "campaign-42"
+    plain = serialize_envelope(OutboundMessage(to="919876543210", content=TextMessage(body="Hi")))
+    assert "biz_opaque_callback_data" not in plain
