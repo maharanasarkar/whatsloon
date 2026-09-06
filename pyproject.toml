@@ -79,8 +79,11 @@ admin = [
   "fastapi>=0.110",
   "uvicorn>=0.29",
 ]
+flows = [
+  "cryptography>=42",
+]
 all = [
-  "whatsloon[sql,admin]",
+  "whatsloon[sql,admin,flows]",
 ]
 
 [tool.setuptools.packages.find]
