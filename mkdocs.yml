@@ -15,6 +15,7 @@ nav:
   - Quickstart: quickstart.md
   - Usage: usage.md
   - Messages: messages.md
+  - Webhooks: webhooks.md
   - Architecture: architecture.md
   - Version support: version-support.md
   - API: api.md
