@@ -18,9 +18,9 @@ def backoff_delay(attempt: int, policy: RetryConfig) -> float:
     Returns:
         Seconds to wait before the next attempt, capped by the policy.
     """
-    delay = min(policy.backoff_base * (2**attempt), policy.backoff_cap)
+    delay: float = min(policy.backoff_base * (2**attempt), policy.backoff_cap)
     if policy.jitter:
-        delay = random.uniform(0, delay)
+        delay = float(random.uniform(0, delay))
     return delay
 
 
