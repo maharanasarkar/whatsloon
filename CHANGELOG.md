@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/messages.md` with the 2.x mapping table and `examples/v3_messages.py`.
 - v3 webhook pipeline: HMAC verification, handshake, version-aware parsing with unknown preservation, fingerprint dedupe, routing/filters, sync/async/queued handling, FastAPI adapter, `docs/webhooks.md`, `examples/v3_webhooks.py`.
 - v3 resources: media upload/download/delete (`wa.media`), template management and WABA/phone clients (`wa.templates`, `wa.business`), Flows endpoint encryption (`whatsloon[flows]`), `docs/resources.md`, examples.
+- v3 reliability: token-bucket pacing, circuit breaker, bulk senders with per-item outcomes, OTel observability middleware (`whatsloon[observability]`), `docs/reliability.md`, `examples/v3_bulk.py`.
 
 ## [2.0.5]
 

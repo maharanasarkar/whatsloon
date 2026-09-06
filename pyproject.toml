@@ -82,8 +82,11 @@ admin = [
 flows = [
   "cryptography>=42",
 ]
+observability = [
+  "opentelemetry-api>=1.20",
+]
 all = [
-  "whatsloon[sql,admin,flows]",
+  "whatsloon[sql,admin,flows,observability]",
 ]
 
 [tool.setuptools.packages.find]
