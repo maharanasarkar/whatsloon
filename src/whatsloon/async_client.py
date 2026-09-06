@@ -119,6 +119,7 @@ class AsyncWhatsApp:
         )
         self.graph = AsyncGraphClient(self.transport, phone_number_id)
         from whatsloon.business.service import AsyncBusinessService
+        from whatsloon.groups.service import AsyncGroupService
         from whatsloon.media.service import AsyncMediaService
         from whatsloon.messages.service import AsyncMessageService
         from whatsloon.templates.service import AsyncTemplateService
@@ -127,6 +128,7 @@ class AsyncWhatsApp:
         self.media = AsyncMediaService(self.transport, phone_number_id)
         self.templates = AsyncTemplateService(self.transport)
         self.business = AsyncBusinessService(self.transport)
+        self.groups = AsyncGroupService(self.transport, phone_number_id)
         self.credentials = Credentials(
             access_token=access_token,
             phone_number_id=phone_number_id,

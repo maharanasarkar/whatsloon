@@ -13,20 +13,23 @@ from typing import Any, Optional
 from whatsloon.messages import models as m
 
 
-def _base(to: str, kind: str, body: dict[str, Any]) -> dict[str, Any]:
+def _base(
+    to: str, kind: str, body: dict[str, Any], recipient_type: str = "individual"
+) -> dict[str, Any]:
     """Build the common message envelope.
 
     Args:
         to: Destination identifier.
         kind: Message type key.
         body: Type-specific content.
+        recipient_type: Either ``"individual"`` or ``"group"``.
 
     Returns:
         Full wire payload.
     """
     return {
         "messaging_product": "whatsapp",
-        "recipient_type": "individual",
+        "recipient_type": recipient_type,
         "to": to,
         "type": kind,
         kind: body,
@@ -426,6 +429,22 @@ def serialize_mark_read(content: m.MarkRead) -> dict[str, Any]:
     }
 
 
+def serialize_pin(to: str, content: m.PinMessage) -> dict[str, Any]:
+    """Serialize a group pin/unpin operation.
+
+    Args:
+        to: Group identifier.
+        content: Typed content.
+
+    Returns:
+        Wire payload.
+    """
+    block: dict[str, Any] = {"type": content.operation, "message_id": content.message_id}
+    if content.operation == "pin":
+        block["expiration_days"] = content.expiration_days
+    return _base(to, "pin", block, "group")
+
+
 _CONTENT_SERIALIZERS: dict[str, Any] = {
     "TextMessage": serialize_text,
     "ImageMessage": serialize_image,
@@ -443,12 +462,16 @@ _CONTENT_SERIALIZERS: dict[str, Any] = {
     "FlowMessage": serialize_flow,
     "AddressMessage": serialize_address,
     "LocationRequestMessage": serialize_location_request,
+    "PinMessage": serialize_pin,
 }
 """Content serializers keyed by model class name."""
 
 
 def serialize_envelope(envelope: m.OutboundMessage) -> dict[str, Any]:
     """Serialize an outbound envelope, injecting reply context when set.
+
+    Group envelopes override ``recipient_type``; tracking data passes
+    through as ``biz_opaque_callback_data``.
 
     Args:
         envelope: Envelope with recipient and typed content.
@@ -464,6 +487,10 @@ def serialize_envelope(envelope: m.OutboundMessage) -> dict[str, Any]:
     if serializer is None:
         raise TypeError(f"Unsupported message content: {name}.")
     payload: dict[str, Any] = serializer(envelope.to, envelope.content)
+    if "recipient_type" in payload:
+        payload["recipient_type"] = envelope.recipient_type
+    if envelope.biz_opaque_callback_data:
+        payload["biz_opaque_callback_data"] = envelope.biz_opaque_callback_data
     if envelope.reply_to_message_id:
         payload["context"] = {"message_id": envelope.reply_to_message_id}
     return payload

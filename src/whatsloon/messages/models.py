@@ -388,6 +388,52 @@ class MarkRead(BaseModel):
     message_id: str = Field(min_length=1)
 
 
+class PinMessage(BaseModel):
+    """Group message pin/unpin operation.
+
+    Attributes:
+        operation: Either ``"pin"`` or ``"unpin"``.
+        message_id: Target message identifier.
+        expiration_days: Pin duration, 1-30 days; required when pinning.
+    """
+
+    operation: str
+    message_id: str = Field(min_length=1)
+    expiration_days: Optional[int] = Field(default=None, ge=1, le=30)
+
+    @field_validator("operation")
+    @classmethod
+    def _check_operation(cls, operation: str) -> str:
+        """Validate the pin operation.
+
+        Args:
+            operation: Candidate operation.
+
+        Returns:
+            The operation unchanged.
+
+        Raises:
+            ValueError: If not pin or unpin.
+        """
+        if operation not in ("pin", "unpin"):
+            raise ValueError("Pin operation must be 'pin' or 'unpin'.")
+        return operation
+
+    @model_validator(mode="after")
+    def _require_expiry(self) -> PinMessage:
+        """Require expiry days when pinning.
+
+        Returns:
+            This instance.
+
+        Raises:
+            ValueError: If pinning without expiry days.
+        """
+        if self.operation == "pin" and self.expiration_days is None:
+            raise ValueError("expiration_days is required when pinning.")
+        return self
+
+
 MessageContent = Union[
     TextMessage,
     ImageMessage,
@@ -405,6 +451,7 @@ MessageContent = Union[
     FlowMessage,
     AddressMessage,
     LocationRequestMessage,
+    PinMessage,
 ]
 """Content types sendable inside an :class:`OutboundMessage` envelope."""
 
@@ -413,14 +460,18 @@ class OutboundMessage(BaseModel):
     """Envelope pairing a recipient with typed content.
 
     Attributes:
-        to: Destination identifier in international format.
+        to: Destination identifier, or group ID when recipient_type is group.
         content: Typed message content.
         reply_to_message_id: Optional parent message for contextual replies.
+        recipient_type: Either ``"individual"`` or ``"group"``.
+        biz_opaque_callback_data: Optional tracking string echoed in webhooks.
     """
 
     to: str = Field(min_length=1)
     content: MessageContent
     reply_to_message_id: Optional[str] = None
+    recipient_type: str = "individual"
+    biz_opaque_callback_data: Optional[str] = None
 
     @field_validator("reply_to_message_id")
     @classmethod
@@ -438,4 +489,22 @@ class OutboundMessage(BaseModel):
         """
         if value is not None and not value:
             raise TypeError("reply_to_message_id must be a non-empty identifier.")
+        return value
+
+    @field_validator("recipient_type")
+    @classmethod
+    def _check_recipient_type(cls, value: str) -> str:
+        """Validate the recipient type.
+
+        Args:
+            value: Candidate recipient type.
+
+        Returns:
+            The value unchanged.
+
+        Raises:
+            ValueError: If not individual or group.
+        """
+        if value not in ("individual", "group"):
+            raise ValueError("recipient_type must be 'individual' or 'group'.")
         return value

@@ -1,0 +1,42 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "102290129340398",
+      "changes": [
+        {
+          "field": "calls",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "13175551399",
+              "phone_number_id": "436666719526789"
+            },
+            "contacts": [
+              {
+                "profile": {"name": "Pablo"},
+                "wa_id": "16315553602",
+                "user_id": "bsuid-user-1",
+                "parent_user_id": "bsuid-parent-1"
+              }
+            ],
+            "calls": [
+              {
+                "id": "wacid.call-1",
+                "to": "16315553601",
+                "from": "16315553602",
+                "event": "connect",
+                "direction": "USER_INITIATED",
+                "timestamp": "1671644824",
+                "session": {
+                  "sdp_type": "offer",
+                  "sdp": "v=0\r\no=- 1 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@
 from whatsloon.webhooks.events import (
     NormalizedEvent,
     UnknownEvent,
+    WebhookCallEvent,
     WebhookMessageReceived,
     WebhookMessageStatus,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "ProcessResult",
     "SubscriptionFilter",
     "UnknownEvent",
+    "WebhookCallEvent",
     "WebhookMessageReceived",
     "WebhookMessageStatus",
     "WebhookProcessor",
