@@ -48,6 +48,9 @@ Repository = "https://github.com/maharanasarkar/whatsloon"
 Issues = "https://github.com/maharanasarkar/whatsloon/issues"
 Changelog = "https://github.com/maharanasarkar/whatsloon/blob/main/CHANGELOG.md"
 
+[project.scripts]
+whatsloon = "whatsloon.cli.main:main"
+
 [project.optional-dependencies]
 test = [
   "pytest>=8",

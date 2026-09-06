@@ -19,6 +19,7 @@ nav:
   - Resources: resources.md
   - Reliability: reliability.md
   - Modern: modern.md
+  - Ecosystem: ecosystem.md
   - Architecture: architecture.md
   - Version support: version-support.md
   - API: api.md

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - v3 resources: media upload/download/delete (`wa.media`), template management and WABA/phone clients (`wa.templates`, `wa.business`), Flows endpoint encryption (`whatsloon[flows]`), `docs/resources.md`, examples.
 - v3 reliability: token-bucket pacing, circuit breaker, bulk senders with per-item outcomes, OTel observability middleware (`whatsloon[observability]`), `docs/reliability.md`, `examples/v3_bulk.py`.
 - v3 modern APIs: group management and group messaging (`wa.groups`), voice calling (`wa.calls`), BSUID/group/call webhook coverage, Direct Send tracking passthrough, `docs/modern.md`, `examples/v3_modern.py`.
+- v3 ecosystem: testing fakes (`whatsloon.testing`), `whatsloon` CLI (init/doctor/send/webhook/template/flow/migrate), migration audit, `docs/ecosystem.md`.
 
 ## [2.0.5]
 
