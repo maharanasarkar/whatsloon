@@ -463,7 +463,7 @@ def serialize_envelope(envelope: m.OutboundMessage) -> dict[str, Any]:
     serializer = _CONTENT_SERIALIZERS.get(name)
     if serializer is None:
         raise TypeError(f"Unsupported message content: {name}.")
-    payload = serializer(envelope.to, envelope.content)
+    payload: dict[str, Any] = serializer(envelope.to, envelope.content)
     if envelope.reply_to_message_id:
         payload["context"] = {"message_id": envelope.reply_to_message_id}
     return payload

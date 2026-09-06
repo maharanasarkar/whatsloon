@@ -14,6 +14,7 @@ nav:
   - Home: index.md
   - Quickstart: quickstart.md
   - Usage: usage.md
+  - Messages: messages.md
   - Architecture: architecture.md
   - Version support: version-support.md
   - API: api.md
