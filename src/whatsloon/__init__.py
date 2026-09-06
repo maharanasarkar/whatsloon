@@ -27,6 +27,8 @@ from .template import TemplateSender
 from .text import TextSender
 from .typing_indicator import TypingIndicator
 from .video import VideoSender
+from .async_client import AsyncWhatsApp
+from .client import SendMessageResult, WhatsApp
 
 
 # Expose all mixins for custom client composition
@@ -52,6 +54,9 @@ __all__ = [
     "TypingIndicator",
     "VideoSender",
     "WhatsAppCloudAPIClient",
+    "AsyncWhatsApp",
+    "SendMessageResult",
+    "WhatsApp",
 ]
 
 

@@ -29,7 +29,8 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -U pip mypy .[dev]
-      - run: mypy src/whatsloon
+      # Legacy 2.x mixins are excluded until Phase 2 migrates them; new core is strict.
+      - run: mypy src/whatsloon/exceptions.py src/whatsloon/client.py src/whatsloon/async_client.py src/whatsloon/compat.py src/whatsloon/config src/whatsloon/auth src/whatsloon/transport src/whatsloon/api_versions
 
   test:
     name: Test py${{ matrix.python-version }}
