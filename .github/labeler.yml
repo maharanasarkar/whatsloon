@@ -1,0 +1,24 @@
+docs:
+  - docs/**/*
+  - mkdocs.yml
+  - "*.md"
+
+tests:
+  - tests/**/*
+  - "test_*.py"
+
+examples:
+  - examples/**/*
+
+ci:
+  - .github/workflows/**/*
+  - .github/dependabot.yml
+  - .github/release-drafter.yml
+  - .github/labeler.yml
+  - .pre-commit-config.yaml
+
+packaging:
+  - pyproject.toml
+  - MANIFEST.in
+  - whatsloon/__init__.py
+  - requirements*.txt

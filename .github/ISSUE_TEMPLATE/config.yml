@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/maharanasarkar/whatsloon/discussions
+    about: Ask questions, share ideas, or get help from the community.
+  - name: Documentation
+    url: https://maharanasarkar.github.io/whatsloon/
+    about: Check the docs for usage guides and API reference.

@@ -1,0 +1,22 @@
+site_name: whatsloon
+site_url: https://maharanasarkar.github.io/whatsloon/
+repo_url: https://github.com/maharanasarkar/whatsloon
+repo_name: maharanasarkar/whatsloon
+theme:
+  name: material
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Usage: usage.md
+  - API: api.md
+  - Changelog: changelog.md
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
