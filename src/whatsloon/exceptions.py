@@ -111,7 +111,6 @@ class APIError(WhatsAppError):
     """
 
     #: Alias kept for ``Raises`` sections written against the spec sketch.
-    WhatsAppAPIError = None  # assigned after class definition
 
     def __init__(
         self,
@@ -164,7 +163,6 @@ class APIError(WhatsAppError):
 
 #: Backwards-compatible alias for the spec sketch name.
 WhatsAppAPIError = APIError
-APIError.WhatsAppAPIError = APIError  # type: ignore[attr-defined]
 
 
 class AuthenticationError(APIError):
