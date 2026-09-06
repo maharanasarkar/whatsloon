@@ -14,8 +14,13 @@ nav:
   - Home: index.md
   - Quickstart: quickstart.md
   - Usage: usage.md
+  - Architecture: architecture.md
+  - Version support: version-support.md
   - API: api.md
   - Changelog: changelog.md
+  - ADRs:
+    - ADR-001: adr/001-pydantic-src-version-matrix.md
+    - ADR-002: adr/002-admin-htmx.md
 markdown_extensions:
   - admonition
   - codehilite
