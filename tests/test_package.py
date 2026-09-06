@@ -6,6 +6,7 @@ These tests check that the package imports, exposes expected modules/classes, an
 import importlib
 import sys
 
+
 def test_import_whatsloon():
     """
     Test that the whatsloon package can be imported.
@@ -13,7 +14,9 @@ def test_import_whatsloon():
     Output: Module is importable and present in sys.modules.
     """
     import whatsloon
+
     assert "whatsloon" in sys.modules
+
 
 def test_import_all_mixins():
     """
@@ -22,8 +25,27 @@ def test_import_all_mixins():
     Output: All mixin modules/classes import without error.
     """
     from whatsloon import (
-        flow, list, reply_buttons, location, location_request, reaction, sticker, template, video, read_receipts, contextual_reply, typing_indicator, address, audio, base, contact, document, image, text
+        flow,
+        list,
+        reply_buttons,
+        location,
+        location_request,
+        reaction,
+        sticker,
+        template,
+        video,
+        read_receipts,
+        contextual_reply,
+        typing_indicator,
+        address,
+        audio,
+        base,
+        contact,
+        document,
+        image,
+        text,
     )
+
     # Just check that the modules are loaded
     assert flow is not None
     assert list is not None
@@ -45,14 +67,17 @@ def test_import_all_mixins():
     assert image is not None
     assert text is not None
 
+
 def test_version_exists():
     """
-    Test that the whatsloon package defines a __version__ attribute (if present).
+    Test that the whatsloon package defines __version__ == "2.0.5".
     Input: None
-    Output: __version__ exists or is not required.
+    Output: __version__ equals "2.0.5".
     """
     import whatsloon
-    assert hasattr(whatsloon, "__version__") or True  # Acceptable if not present
+
+    assert whatsloon.__version__ == "2.0.5"
+
 
 def test_dummy_client_integration():
     """
@@ -81,9 +106,25 @@ def test_dummy_client_integration():
     from whatsloon.text import TextSender
 
     class DummyClient(
-        FlowSender, ListSender, ReplyButtonSender, LocationSender, LocationRequestSender,
-        ReactionSender, StickerSender, TemplateSender, VideoSender, ReadMark, ContextualReply,
-        TypingIndicator, AddressSender, AudioSender, WhatsAppBaseClient, ContactSender, DocumentSender, ImageSender, TextSender
+        FlowSender,
+        ListSender,
+        ReplyButtonSender,
+        LocationSender,
+        LocationRequestSender,
+        ReactionSender,
+        StickerSender,
+        TemplateSender,
+        VideoSender,
+        ReadMark,
+        ContextualReply,
+        TypingIndicator,
+        AddressSender,
+        AudioSender,
+        WhatsAppBaseClient,
+        ContactSender,
+        DocumentSender,
+        ImageSender,
+        TextSender,
     ):
         def __init__(self):
             WhatsAppBaseClient.__init__(

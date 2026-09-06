@@ -1,0 +1,35 @@
+name: Bug Report
+description: Report a reproducible bug
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! Please fill in all sections.
+  - type: input
+    id: version
+    attributes:
+      label: whatsloon version
+      placeholder: e.g. 2.0.5
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      placeholder: e.g. 3.11.4
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction steps
+      placeholder: Minimal code snippet + expected vs actual
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / traceback
+    validations:
+      required: false
