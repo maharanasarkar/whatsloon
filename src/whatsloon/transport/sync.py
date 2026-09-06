@@ -1,0 +1,168 @@
+"""Synchronous pooled transport."""
+
+from __future__ import annotations
+
+import time
+from typing import Any, Optional
+
+import httpx
+
+from whatsloon.config.settings import RetryConfig, TimeoutConfig
+from whatsloon.exceptions import WhatsAppError
+from whatsloon.transport.base import (
+    BaseTransport,
+    backoff_seconds,
+    logger,
+    map_httpx_error,
+    redact_headers,
+    should_retry,
+    translate_error,
+)
+from whatsloon.transport.request import Request
+from whatsloon.transport.response import Response
+
+
+class SyncTransport(BaseTransport):
+    """Pooled synchronous transport reusing one ``httpx.Client``.
+
+    Attributes:
+        client: Underlying pooled HTTP client, created on first use.
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the sync transport.
+
+        Args:
+            **kwargs: Forwarded to :class:`BaseTransport`.
+        """
+        super().__init__(**kwargs)
+        self._client: Optional[httpx.Client] = None
+
+    @property
+    def client(self) -> httpx.Client:
+        """Return the shared pooled client, creating it on first use.
+
+        Returns:
+            Shared ``httpx.Client``.
+        """
+        if self._client is None:
+            timeout = httpx.Timeout(
+                connect=self.timeout.connect,
+                read=self.timeout.read,
+                write=self.timeout.write,
+                pool=self.timeout.pool,
+            )
+            self._client = httpx.Client(timeout=timeout)
+        return self._client
+
+    def close(self) -> None:
+        """Close the pooled client.
+
+        Releases underlying connections. Safe to call multiple times.
+        """
+        if self._client is not None:
+            self._client.close()
+            self._client = None
+
+    def __enter__(self) -> SyncTransport:
+        """Enter the transport context.
+
+        Returns:
+            This transport.
+        """
+        return self
+
+    def __exit__(self, *exc_info: Any) -> None:
+        """Exit the transport context, closing pooled connections."""
+        self.close()
+
+    def send(self, request: Request) -> Response:
+        """Execute one request with retries.
+
+        Args:
+            request: Outbound request.
+
+        Returns:
+            Normalized response.
+
+        Raises:
+            WhatsAppError: On transport failure or Meta rejection.
+        """
+        last_error: WhatsAppError | None = None
+        for attempt in range(self.retry.max_attempts):
+            try:
+                return self._send_once(request)
+            except WhatsAppError as exc:
+                last_error = exc
+                if not should_retry(exc, attempt, self.retry):
+                    raise
+                wait = backoff_seconds(exc, attempt, self.retry)
+                logger.debug(
+                    "Retrying %s %s (attempt %d) in %.2fs",
+                    request.method,
+                    request.path,
+                    attempt + 2,
+                    wait,
+                )
+                time.sleep(wait)
+        raise last_error  # type: ignore[misc]
+
+    def _send_once(self, request: Request) -> Response:
+        """Execute a single attempt without retry.
+
+        Args:
+            request: Outbound request.
+
+        Returns:
+            Normalized response.
+
+        Raises:
+            WhatsAppError: On transport failure or Meta rejection.
+        """
+        timeout = None
+        if request.timeout_override:
+            timeout = httpx.Timeout(
+                connect=self.timeout.connect,
+                read=request.timeout_override,
+                write=self.timeout.write,
+                pool=self.timeout.pool,
+            )
+        headers = self._headers(request.headers)
+        logger.debug(
+            "%s %s headers=%s correlation_id=%s",
+            request.method,
+            request.path,
+            redact_headers(headers),
+            request.correlation_id,
+        )
+        try:
+            raw = self.client.request(
+                request.method,
+                self._url(request.path),
+                params=request.params or None,
+                json=request.json_body,
+                headers=headers,
+                timeout=timeout,
+            )
+        except httpx.HTTPError as exc:
+            raise map_httpx_error(exc) from exc
+        try:
+            data = raw.json() if raw.content else {}
+        except ValueError:
+            data = {}
+        response = Response(
+            status_code=raw.status_code,
+            data=data if isinstance(data, dict) else {},
+            headers=dict(raw.headers),
+            correlation_id=request.correlation_id,
+        )
+        if raw.status_code >= 400:
+            raise translate_error(
+                status_code=raw.status_code,
+                payload=response.data,
+                headers=response.headers,
+            )
+        return response
+
+
+__all__ = ["SyncTransport"]
