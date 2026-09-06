@@ -219,22 +219,27 @@ class BaseTransport(ABC):
         """
         headers = {
             "Authorization": f"Bearer {self._access_token}",
-            "Content-Type": "application/json",
             "User-Agent": self.user_agent,
         }
         if extra:
             headers.update(extra)
+        if "Content-Type" not in headers:
+            headers["Content-Type"] = "application/json"
         return headers
 
     def _url(self, path: str) -> str:
         """Join the base URL and request path.
 
+        Absolute URLs (media download links) pass through unchanged.
+
         Args:
-            path: URL path beginning with ``/``.
+            path: URL path beginning with ``/``, or an absolute URL.
 
         Returns:
             Absolute URL.
         """
+        if path.startswith("http://") or path.startswith("https://"):
+            return path
         return f"{self.base_url}{path}"
 
     @abstractmethod

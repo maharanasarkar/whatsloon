@@ -215,9 +215,15 @@ class WhatsApp:
             user_agent=self.config.user_agent,
         )
         self.graph = GraphClient(self.transport, phone_number_id)
+        from whatsloon.business.service import BusinessService
+        from whatsloon.media.service import MediaService
         from whatsloon.messages.service import MessageService
+        from whatsloon.templates.service import TemplateService
 
         self.messages = MessageService(self.adapter, self.transport, phone_number_id)
+        self.media = MediaService(self.transport, phone_number_id)
+        self.templates = TemplateService(self.transport)
+        self.business = BusinessService(self.transport)
         self.credentials = Credentials(
             access_token=access_token,
             phone_number_id=phone_number_id,
