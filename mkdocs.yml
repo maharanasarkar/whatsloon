@@ -17,6 +17,7 @@ nav:
   - Messages: messages.md
   - Webhooks: webhooks.md
   - Resources: resources.md
+  - Reliability: reliability.md
   - Architecture: architecture.md
   - Version support: version-support.md
   - API: api.md
