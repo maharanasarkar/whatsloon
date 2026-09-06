@@ -1,0 +1,28 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "123456789",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "919000000000",
+              "phone_number_id": "123"
+            },
+            "statuses": [
+              {
+                "id": "wamid.fixture-status-1",
+                "status": "delivered",
+                "timestamp": "1725000001",
+                "recipient_id": "919876543210"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
