@@ -89,21 +89,51 @@ def _parse_change(change: Any, *, api_version: str) -> list[NormalizedEvent]:
         return [UnknownEvent(api_version=api_version, reason="missing value", raw=change)]
     events: list[NormalizedEvent] = []
     phone_id = str(value.get("metadata", {}).get("phone_number_id", ""))
+    identities = _contact_identities(value.get("contacts", []))
     for message in value.get("messages", []) or []:
-        events.append(_parse_message(message, phone_id=phone_id, api_version=api_version))
+        events.append(
+            _parse_message(
+                message, phone_id=phone_id, identities=identities, api_version=api_version
+            )
+        )
     for status in value.get("statuses", []) or []:
         events.append(_parse_status(status, api_version=api_version))
+    for call in value.get("calls", []) or []:
+        events.append(_parse_call(call, api_version=api_version))
     if not events:
         events.append(UnknownEvent(api_version=api_version, reason="unrecognized value", raw=value))
     return events
 
 
-def _parse_message(message: Any, *, phone_id: str, api_version: str) -> NormalizedEvent:
+def _contact_identities(contacts: Any) -> dict[str, dict[str, str]]:
+    """Map sender identifiers to BSUID identity pairs.
+
+    Args:
+        contacts: Raw contacts array.
+
+    Returns:
+        Mapping of wa_id to user/parent identifiers.
+    """
+    identities: dict[str, dict[str, str]] = {}
+    if isinstance(contacts, list):
+        for contact in contacts:
+            if isinstance(contact, dict) and contact.get("wa_id"):
+                identities[str(contact["wa_id"])] = {
+                    "user_id": str(contact.get("user_id", "")),
+                    "parent_user_id": str(contact.get("parent_user_id", "")),
+                }
+    return identities
+
+
+def _parse_message(
+    message: Any, *, phone_id: str, identities: dict[str, dict[str, str]], api_version: str
+) -> NormalizedEvent:
     """Normalize one inbound message.
 
     Args:
         message: Raw message object.
         phone_id: Recipient phone number ID.
+        identities: BSUID identity map keyed by sender.
         api_version: Adapter version stamp.
 
     Returns:
@@ -118,15 +148,48 @@ def _parse_message(message: Any, *, phone_id: str, api_version: str) -> Normaliz
     text = message.get("text")
     if isinstance(text, dict) and isinstance(text.get("body"), str):
         text_body = text["body"]
+    sender = str(message.get("from", ""))
+    identity = identities.get(sender, {})
     return WebhookMessageReceived(
         api_version=api_version,
         message_id=str(message.get("id", "")),
-        sender=str(message.get("from", "")),
+        sender=sender,
         recipient_phone_id=phone_id,
         timestamp=str(message.get("timestamp", "")),
         message_type=kind,
         text_body=text_body,
+        group_id=str(message.get("group_id", "")),
+        user_id=identity.get("user_id", ""),
+        parent_user_id=identity.get("parent_user_id", ""),
         raw=message,
+    )
+
+
+def _parse_call(call: Any, *, api_version: str) -> NormalizedEvent:
+    """Normalize one voice call webhook object.
+
+    Args:
+        call: Raw call object.
+        api_version: Adapter version stamp.
+
+    Returns:
+        Typed call event, or UnknownEvent for malformed entries.
+    """
+    from whatsloon.webhooks.events import WebhookCallEvent
+
+    if not isinstance(call, dict) or "id" not in call:
+        return UnknownEvent(api_version=api_version, reason="malformed call", raw={"call": call})
+    session = call.get("session", {}) if isinstance(call.get("session"), dict) else {}
+    return WebhookCallEvent(
+        api_version=api_version,
+        call_id=str(call.get("id", "")),
+        call_event=str(call.get("event", "")),
+        direction=str(call.get("direction", "")),
+        caller=str(call.get("from", "")),
+        callee=str(call.get("to", "")),
+        timestamp=str(call.get("timestamp", "")),
+        sdp_type=str(session.get("sdp_type", "")),
+        raw=call,
     )
 
 

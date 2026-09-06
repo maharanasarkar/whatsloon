@@ -23,6 +23,9 @@ class WebhookMessageReceived(BaseModel):
         timestamp: Meta timestamp string.
         message_type: Meta message type such as ``"text"``.
         text_body: Plain text when present.
+        group_id: Group identifier for group messages.
+        user_id: Business-scoped user ID (BSUID) when reported.
+        parent_user_id: Parent BSUID when reported.
         raw: Preserved raw message object.
     """
 
@@ -34,6 +37,9 @@ class WebhookMessageReceived(BaseModel):
     timestamp: str = ""
     message_type: str = ""
     text_body: Optional[str] = None
+    group_id: str = ""
+    user_id: str = ""
+    parent_user_id: str = ""
     raw: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -59,6 +65,34 @@ class WebhookMessageStatus(BaseModel):
     raw: dict[str, Any] = Field(default_factory=dict)
 
 
+class WebhookCallEvent(BaseModel):
+    """Normalized voice call webhook event.
+
+    Attributes:
+        event_type: Always ``"call.event"``.
+        api_version: Adapter version used for normalization.
+        call_id: WhatsApp call identifier.
+        call_event: Call event such as ``"connect"`` or ``"terminate"``.
+        direction: Either ``"USER_INITIATED"`` or ``"BUSINESS_INITIATED"``.
+        caller: Caller identifier.
+        callee: Callee identifier.
+        timestamp: Meta timestamp string.
+        sdp_type: Session type such as ``"offer"`` when present.
+        raw: Preserved raw call object.
+    """
+
+    event_type: Literal["call.event"] = "call.event"
+    api_version: str = ""
+    call_id: str = ""
+    call_event: str = ""
+    direction: str = ""
+    caller: str = ""
+    callee: str = ""
+    timestamp: str = ""
+    sdp_type: str = ""
+    raw: dict[str, Any] = Field(default_factory=dict)
+
+
 class UnknownEvent(BaseModel):
     """Preserved unrecognized webhook content.
 
@@ -75,5 +109,7 @@ class UnknownEvent(BaseModel):
     raw: dict[str, Any] = Field(default_factory=dict)
 
 
-NormalizedEvent = Union[WebhookMessageReceived, WebhookMessageStatus, UnknownEvent]
+NormalizedEvent = Union[
+    WebhookMessageReceived, WebhookMessageStatus, WebhookCallEvent, UnknownEvent
+]
 """Any normalized inbound event."""
