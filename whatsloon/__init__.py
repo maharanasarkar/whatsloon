@@ -5,6 +5,8 @@ This module exposes the main WhatsAppCloudAPIClient class, which combines all
 WhatsApp Cloud API functionalities.
 """
 
+__version__ = "2.0.5"
+
 from .base import WhatsAppBaseClient
 from .address import AddressSender
 from .audio import AudioSender
@@ -25,7 +27,6 @@ from .template import TemplateSender
 from .text import TextSender
 from .typing_indicator import TypingIndicator
 from .video import VideoSender
-
 
 
 # Expose all mixins for custom client composition
@@ -52,6 +53,7 @@ __all__ = [
     "VideoSender",
     "WhatsAppCloudAPIClient",
 ]
+
 
 class WhatsAppCloudAPIClient(
     WhatsAppBaseClient,
@@ -92,4 +94,5 @@ class WhatsAppCloudAPIClient(
 
     All mixins are available for import from the package root.
     """
+
     pass
