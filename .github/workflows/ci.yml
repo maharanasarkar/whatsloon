@@ -29,7 +29,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -U pip mypy .[dev]
-      - run: mypy whatsloon
+      - run: mypy src/whatsloon
 
   test:
     name: Test py${{ matrix.python-version }}
@@ -71,7 +71,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -U pip .[docs] interrogate
-      - run: interrogate -v whatsloon/
+      - run: interrogate -v src/whatsloon/
       - run: mkdocs build --strict
 
   secret-scan:

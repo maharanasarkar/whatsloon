@@ -9,7 +9,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [.]
+          paths: [src]
 nav:
   - Home: index.md
   - Quickstart: quickstart.md
