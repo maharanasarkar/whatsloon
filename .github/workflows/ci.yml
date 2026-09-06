@@ -50,7 +50,7 @@ jobs:
       - run: pytest --cov --cov-report=xml
         env:
           WHATSLOON_TEST_API_VERSION: ${{ matrix.api-version }}
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v7
         if: matrix.python-version == '3.12' && matrix.api-version == 'v26.0'
         with:
           files: coverage.xml
