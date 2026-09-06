@@ -79,6 +79,8 @@ docs/_build/
 
 # Logs
 *.log
+logs/
+!.gitkeep
 
 
 # Temporary files
