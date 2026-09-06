@@ -69,7 +69,7 @@ def create_webhook_router(
     async def delivery(
         request: Request,
         signature: Optional[str] = Header(default=None, alias="X-Hub-Signature-256"),
-    ) -> dict[str, _Any]:
+    ) -> _Any:
         """Accept one webhook delivery and run the pipeline.
 
         Args:
@@ -77,10 +77,17 @@ def create_webhook_router(
             signature: Signature header value.
 
         Returns:
-            Ack summary; always 200 once the receipt persisted.
+            Ack summary; verification failures map to 401/400 statuses.
         """
+        from whatsloon.exceptions import InvalidPayloadError, InvalidSignatureError
+
         raw_body = await request.body()
-        results = await processor.aprocess(raw_body, signature, app_secret=app_secret)
+        try:
+            results = await processor.aprocess(raw_body, signature, app_secret=app_secret)
+        except InvalidSignatureError:
+            return Response(status_code=401, content="unauthorized")
+        except InvalidPayloadError:
+            return Response(status_code=400, content="bad request")
         return {"ok": True, "results": [r.__dict__ for r in results]}
 
     return router

@@ -73,3 +73,9 @@ def test_handshake_and_delivery():
     assert delivery.status_code == 200
     assert delivery.json()["results"][0]["outcome"] == "handled"
     assert len(handled) == 1
+    tampered = client.post(
+        "/webhooks/whatsapp",
+        content=b"tampered",
+        headers={"X-Hub-Signature-256": "sha256=wrong"},
+    )
+    assert tampered.status_code == 401
