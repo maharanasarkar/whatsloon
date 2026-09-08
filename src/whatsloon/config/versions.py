@@ -11,11 +11,10 @@ import warnings
 from dataclasses import dataclass
 from typing import ClassVar, Optional
 
-
 LATEST_VERSION: str = "v26.0"
 """Pinned current adapter; the ``latest`` alias resolves here."""
 
-SUPPORTED_VERSIONS: tuple[str, ...] = ("v19.0", "v26.0")
+SUPPORTED_VERSIONS: tuple[str, ...] = ("v19.0", "v20.0", "v26.0")
 """Versions with first-class adapters in this release."""
 
 DEPRECATED_VERSIONS: frozenset[str] = frozenset()
@@ -96,6 +95,12 @@ VERSION_MATRIX: tuple[VersionInfo, ...] = (
         status="supported",
         serves_traffic=None,
         notes="Legacy baseline wrapper; kept even after Meta EOL.",
+    ),
+    VersionInfo(
+        version="v20.0",
+        status="supported",
+        serves_traffic=None,
+        notes="Intermediate migration baseline between v19.0 and v26.0.",
     ),
     VersionInfo(
         version="v26.0",

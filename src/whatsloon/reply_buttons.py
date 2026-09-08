@@ -4,13 +4,16 @@ Module for sending interactive Reply Button messages via WhatsApp Cloud API.
 This module defines the ReplyButtonSender class, which provides methods to build payloads and send interactive reply button messages using the WhatsApp Cloud API.
 """
 
-from typing import Any, Dict, List, Optional
-import requests
-import httpx
 import logging
+from typing import Any, Dict, List, Optional
+
+import httpx
+import requests
+
+from whatsloon.base import LegacyMixinBase
 
 
-class ReplyButtonSender:
+class ReplyButtonSender(LegacyMixinBase):
     """
     Mixin class for sending interactive Reply Button messages via WhatsApp Cloud API.
 
@@ -89,9 +92,7 @@ class ReplyButtonSender:
         Returns:
             requests.Response: The response object from the API.
         """
-        return requests.post(
-            url=self.base_url, headers=self.headers, json=payload, timeout=10
-        )
+        return requests.post(url=self.base_url, headers=self.headers, json=payload, timeout=10)
 
     async def _async_send_request(self, payload: Dict[str, Any]) -> httpx.Response:
         """
@@ -192,4 +193,3 @@ class ReplyButtonSender:
         except Exception as err:
             self.logger.error(f"An error occurred: {err}")
             return {"success": False, "error": str(err)}
-

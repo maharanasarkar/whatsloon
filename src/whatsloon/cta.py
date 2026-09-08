@@ -4,13 +4,16 @@ Module for sending interactive Call-to-Action (CTA) URL button messages via What
 This module defines the CTASender class, which provides methods to build payloads and send CTA URL button messages using the WhatsApp Cloud API.
 """
 
-from typing import Any, Dict, Optional
-import requests
-import httpx
 import logging
+from typing import Any, Dict, Optional
+
+import httpx
+import requests
+
+from whatsloon.base import LegacyMixinBase
 
 
-class CTASender:
+class CTASender(LegacyMixinBase):
     """
     Mixin class for sending interactive CTA URL button messages via WhatsApp Cloud API.
 
@@ -74,9 +77,7 @@ class CTASender:
         Returns:
             requests.Response: The response object from the API.
         """
-        return requests.post(
-            url=self.base_url, headers=self.headers, json=payload, timeout=10
-        )
+        return requests.post(url=self.base_url, headers=self.headers, json=payload, timeout=10)
 
     async def _async_send_request(self, payload: Dict[str, Any]) -> httpx.Response:
         """

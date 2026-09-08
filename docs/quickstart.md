@@ -27,6 +27,7 @@ Send a text message (async):
 import asyncio
 from whatsloon import WhatsAppCloudAPIClient
 
+
 async def main():
     client = WhatsAppCloudAPIClient(
         access_token="ACCESS_TOKEN",
@@ -36,6 +37,7 @@ async def main():
     )
     result = await client.async_send_text_message("Hello async!")
     print(result)
+
 
 asyncio.run(main())
 ```

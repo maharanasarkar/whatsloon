@@ -12,7 +12,7 @@ import asyncio
 import inspect
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Optional
 
 from whatsloon.persistence.models import ProcessingStatus, WebhookEvent, utcnow

@@ -1,0 +1,5 @@
+{
+  "messages": [{"id": "wamid.v20-text-1"}],
+  "messaging_product": "whatsapp",
+  "contacts": [{"input": "919876543210", "wa_id": "919876543210"}]
+}

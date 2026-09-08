@@ -1,11 +1,13 @@
 import pytest
 from whatsloon.image import ImageSender
 
+
 class DummyClient(ImageSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_image_payload_media_id():
     """
@@ -18,6 +20,7 @@ def test_build_image_payload_media_id():
     assert payload["type"] == "image"
     assert payload["image"]["id"] == "mediaid"
 
+
 def test_build_image_payload_media_link():
     """
     Test building image payload with only media_link provided.
@@ -27,6 +30,7 @@ def test_build_image_payload_media_link():
     client = DummyClient()
     payload = client._build_image_payload(media_link="http://example.com/img.jpg")
     assert payload["image"]["link"] == "http://example.com/img.jpg"
+
 
 def test_build_image_payload_error():
     """
@@ -38,6 +42,7 @@ def test_build_image_payload_error():
     with pytest.raises(ValueError):
         client._build_image_payload()
 
+
 def test_build_image_payload_both_fields():
     """
     Test building image payload with both media_id and media_link provided.
@@ -45,9 +50,12 @@ def test_build_image_payload_both_fields():
     Output: Payload contains both 'id' and 'link' in 'image'.
     """
     client = DummyClient()
-    payload = client._build_image_payload(media_id="mediaid", media_link="http://example.com/img.jpg")
+    payload = client._build_image_payload(
+        media_id="mediaid", media_link="http://example.com/img.jpg"
+    )
     assert payload["image"]["id"] == "mediaid"
     assert payload["image"]["link"] == "http://example.com/img.jpg"
+
 
 def test_build_image_payload_with_caption():
     """
@@ -59,6 +67,7 @@ def test_build_image_payload_with_caption():
     payload = client._build_image_payload(media_id="mediaid", caption="A cat")
     assert payload["image"]["caption"] == "A cat"
 
+
 def test_build_image_payload_empty_media_id():
     """
     Test error when media_id is empty string and no media_link.
@@ -68,6 +77,7 @@ def test_build_image_payload_empty_media_id():
     client = DummyClient()
     with pytest.raises(ValueError):
         client._build_image_payload(media_id="")
+
 
 def test_build_image_payload_empty_media_link():
     """

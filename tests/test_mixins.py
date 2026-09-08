@@ -122,9 +122,7 @@ def test_location_sender(mock_post, client):
     """
     mock_post.return_value.status_code = 200
     mock_post.return_value.json.return_value = {"messages": ["ok"]}
-    payload = client._build_location_payload(
-        37.7749, -122.4194, name="SF", address="CA"
-    )
+    payload = client._build_location_payload(37.7749, -122.4194, name="SF", address="CA")
     result = client._send_request(payload)
     assert result.status_code == 200
 
@@ -191,9 +189,7 @@ def test_template_sender(mock_post, client):
     """
     mock_post.return_value.status_code = 200
     mock_post.return_value.json.return_value = {"messages": ["ok"]}
-    payload = client._build_template_payload(
-        template_name="welcome", language_code="en_US"
-    )
+    payload = client._build_template_payload(template_name="welcome", language_code="en_US")
     result = client._send_request(payload)
     assert result.status_code == 200
 

@@ -1,20 +1,24 @@
-
 """
 Mixin class for sending typing indicators via WhatsApp Cloud API.
 Implements both synchronous and asynchronous methods.
 """
 
-from typing import Dict, Any
-import requests
-import httpx
 import logging
+from typing import Any, Dict
 
-class TypingIndicator:
+import httpx
+import requests
+
+from whatsloon.base import LegacyMixinBase
+
+
+class TypingIndicator(LegacyMixinBase):
     """
     Mixin class for sending typing indicators (on/off) via WhatsApp Cloud API.
 
     Provides both synchronous and asynchronous methods to send typing indicators.
     """
+
     logger = logging.getLogger("whatsapp")
 
     def _build_typing_indicator_payload(self, status: str) -> Dict[str, Any]:
@@ -46,9 +50,7 @@ class TypingIndicator:
         Returns:
             requests.Response: The response object from the API.
         """
-        return requests.post(
-            url=self.base_url, headers=self.headers, json=payload, timeout=10
-        )
+        return requests.post(url=self.base_url, headers=self.headers, json=payload, timeout=10)
 
     async def _async_send_request(self, payload: Dict[str, Any]) -> httpx.Response:
         """

@@ -1,10 +1,12 @@
 from whatsloon.cta import CTASender
 
+
 class DummyClient(CTASender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_cta_payload():
     """
@@ -19,6 +21,7 @@ def test_build_cta_payload():
     assert payload["type"] == "interactive"
     assert payload["interactive"]["action"]["name"] == "cta_url"
 
+
 def test_build_cta_payload_with_header_footer():
     """
     Test building CTA payload with header and footer.
@@ -27,11 +30,15 @@ def test_build_cta_payload_with_header_footer():
     """
     client = DummyClient()
     payload = client._build_cta_payload(
-        body_text="Body", button_text="Click", button_url="http://example.com",
-        header={"type": "text", "text": "Header"}, footer_text="Footer"
+        body_text="Body",
+        button_text="Click",
+        button_url="http://example.com",
+        header={"type": "text", "text": "Header"},
+        footer_text="Footer",
     )
     assert payload["interactive"]["header"]["text"] == "Header"
     assert payload["interactive"]["footer"]["text"] == "Footer"
+
 
 def test_build_cta_payload_missing_body():
     """
@@ -47,6 +54,7 @@ def test_build_cta_payload_missing_body():
     else:
         assert False, "TypeError not raised for missing body_text"
 
+
 def test_build_cta_payload_missing_button_text():
     """
     Test error when button_text is missing.
@@ -60,6 +68,7 @@ def test_build_cta_payload_missing_button_text():
         pass
     else:
         assert False, "TypeError not raised for missing button_text"
+
 
 def test_build_cta_payload_missing_button_url():
     """

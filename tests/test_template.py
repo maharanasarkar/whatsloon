@@ -1,10 +1,12 @@
 from whatsloon.template import TemplateSender
 
+
 class DummyClient(TemplateSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_template_payload():
     """
@@ -13,14 +15,13 @@ def test_build_template_payload():
     Output: Payload contains correct WhatsApp fields and template data.
     """
     client = DummyClient()
-    payload = client._build_template_payload(
-        template_name="welcome", language_code="en_US"
-    )
+    payload = client._build_template_payload(template_name="welcome", language_code="en_US")
     assert payload["messaging_product"] == "whatsapp"
     assert payload["to"] == "1234567890"
     assert payload["type"] == "template"
     assert payload["template"]["name"] == "welcome"
     assert payload["template"]["language"]["code"] == "en_US"
+
 
 def test_build_template_payload_with_components():
     """
@@ -35,6 +36,7 @@ def test_build_template_payload_with_components():
     )
     assert payload["template"]["components"] == components
 
+
 def test_build_template_payload_with_recipient_type():
     """
     Test building template payload with recipient_type.
@@ -46,6 +48,7 @@ def test_build_template_payload_with_recipient_type():
         template_name="welcome", language_code="en_US", recipient_type="group"
     )
     assert payload["recipient_type"] == "group"
+
 
 def test_build_template_payload_missing_template_name():
     """
@@ -60,6 +63,7 @@ def test_build_template_payload_missing_template_name():
         pass
     else:
         assert False, "TypeError not raised for missing template_name"
+
 
 def test_build_template_payload_missing_language_code():
     """

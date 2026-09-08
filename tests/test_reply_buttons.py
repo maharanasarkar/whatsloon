@@ -1,11 +1,13 @@
 import pytest
 from whatsloon.reply_buttons import ReplyButtonSender
 
+
 class DummyClient(ReplyButtonSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_reply_buttons_payload():
     """
@@ -22,6 +24,7 @@ def test_build_reply_buttons_payload():
     assert payload["type"] == "interactive"
     assert payload["interactive"]["type"] == "button"
 
+
 def test_build_reply_buttons_payload_button_limit():
     """
     Test error when more than 3 buttons are provided.
@@ -31,8 +34,10 @@ def test_build_reply_buttons_payload_button_limit():
     client = DummyClient()
     with pytest.raises(ValueError):
         client._build_reply_buttons_payload(
-            body_text="Reply?", buttons=[{"type": "reply", "reply": {"id": str(i), "title": "Btn"}} for i in range(4)]
+            body_text="Reply?",
+            buttons=[{"type": "reply", "reply": {"id": str(i), "title": "Btn"}} for i in range(4)],
         )
+
 
 def test_build_reply_buttons_payload_title_length():
     """
@@ -43,8 +48,9 @@ def test_build_reply_buttons_payload_title_length():
     client = DummyClient()
     with pytest.raises(ValueError):
         client._build_reply_buttons_payload(
-            body_text="Reply?", buttons=[{"type": "reply", "reply": {"id": "1", "title": "x"*21}}]
+            body_text="Reply?", buttons=[{"type": "reply", "reply": {"id": "1", "title": "x" * 21}}]
         )
+
 
 def test_build_reply_buttons_payload_invalid_header_type():
     """
@@ -55,9 +61,11 @@ def test_build_reply_buttons_payload_invalid_header_type():
     client = DummyClient()
     with pytest.raises(ValueError):
         client._build_reply_buttons_payload(
-            body_text="Reply?", buttons=[{"type": "reply", "reply": {"id": "1", "title": "Yes"}}],
-            header={"type": "audio", "audio": {"id": "123"}}
+            body_text="Reply?",
+            buttons=[{"type": "reply", "reply": {"id": "1", "title": "Yes"}}],
+            header={"type": "audio", "audio": {"id": "123"}},
         )
+
 
 def test_build_reply_buttons_payload_with_header_footer():
     """
@@ -67,8 +75,10 @@ def test_build_reply_buttons_payload_with_header_footer():
     """
     client = DummyClient()
     payload = client._build_reply_buttons_payload(
-        body_text="Reply?", buttons=[{"type": "reply", "reply": {"id": "1", "title": "Yes"}}],
-        header={"type": "text", "text": "Header"}, footer_text="Footer"
+        body_text="Reply?",
+        buttons=[{"type": "reply", "reply": {"id": "1", "title": "Yes"}}],
+        header={"type": "text", "text": "Header"},
+        footer_text="Footer",
     )
     assert payload["interactive"]["header"]["text"] == "Header"
     assert payload["interactive"]["footer"]["text"] == "Footer"

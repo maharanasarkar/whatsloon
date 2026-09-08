@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 from whatsloon.exceptions import ValidationError
 from whatsloon.media.models import MediaDownload, MediaInfo, UploadResult

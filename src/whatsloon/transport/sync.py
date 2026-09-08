@@ -7,7 +7,6 @@ from typing import Any, Optional
 
 import httpx
 
-from whatsloon.config.settings import RetryConfig, TimeoutConfig
 from whatsloon.exceptions import WhatsAppError
 from whatsloon.transport.base import (
     BaseTransport,

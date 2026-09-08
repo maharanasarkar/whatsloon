@@ -26,6 +26,7 @@ def test_build_text_payload():
     assert payload["text"]["body"] == "Hello, world!"
     assert payload["text"]["preview_url"] is False
 
+
 def test_build_text_payload_preview_url_true():
     """
     Test building text payload with preview_url True.
@@ -97,6 +98,7 @@ def test_send_text_message_exception(monkeypatch):
     result = client.send_text_message("Test message", preview_url=True)
     assert result["success"] is False
     assert result["error"] == "fail"
+
 
 def test_build_text_payload_missing_body():
     """

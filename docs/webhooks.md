@@ -12,7 +12,9 @@ comparison. Missing secrets, headers, or mismatches fail closed:
 from whatsloon.webhooks import verify_signature, verify_handshake
 
 verify_signature(app_secret, raw_body, signature_header)
-challenge = verify_handshake(mode=..., verify_token_expected=..., verify_token_received=..., challenge=...)
+challenge = verify_handshake(
+    mode=..., verify_token_expected=..., verify_token_received=..., challenge=...
+)
 ```
 
 ## Handling

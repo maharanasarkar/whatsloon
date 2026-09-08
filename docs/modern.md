@@ -16,7 +16,9 @@ Group messaging reuses `wa.messages` with `recipient_type="group"`:
 ```python
 from whatsloon.messages.models import OutboundMessage, TextMessage
 
-wa.messages.send(OutboundMessage(to=group.id, content=TextMessage(body="Hi team"), recipient_type="group"))
+wa.messages.send(
+    OutboundMessage(to=group.id, content=TextMessage(body="Hi team"), recipient_type="group")
+)
 ```
 
 Pin messages with `PinMessage(operation="pin", message_id="...", expiration_days=4)`.
@@ -39,8 +41,13 @@ Inbound calls arrive as `call.event` webhooks with SDP offers; register a
 Attach tracking data echoed back in webhooks:
 
 ```python
-wa.messages.send_text(to="...", body="...", )
-envelope = OutboundMessage(to="...", content=TextMessage(body="..."), biz_opaque_callback_data="campaign-42")
+wa.messages.send_text(
+    to="...",
+    body="...",
+)
+envelope = OutboundMessage(
+    to="...", content=TextMessage(body="..."), biz_opaque_callback_data="campaign-42"
+)
 wa.messages.send(envelope)
 ```
 

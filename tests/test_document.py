@@ -1,11 +1,13 @@
 import pytest
 from whatsloon.document import DocumentSender
 
+
 class DummyClient(DocumentSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_document_payload_media_id():
     """
@@ -18,6 +20,7 @@ def test_build_document_payload_media_id():
     assert payload["type"] == "document"
     assert payload["document"]["id"] == "mediaid"
 
+
 def test_build_document_payload_media_link():
     """
     Test building document payload with only media_link provided.
@@ -27,6 +30,7 @@ def test_build_document_payload_media_link():
     client = DummyClient()
     payload = client._build_document_payload(media_link="http://example.com/doc.pdf")
     assert payload["document"]["link"] == "http://example.com/doc.pdf"
+
 
 def test_build_document_payload_error():
     """
@@ -38,6 +42,7 @@ def test_build_document_payload_error():
     with pytest.raises(ValueError):
         client._build_document_payload()
 
+
 def test_build_document_payload_both_fields():
     """
     Test building document payload with both media_id and media_link provided.
@@ -45,9 +50,12 @@ def test_build_document_payload_both_fields():
     Output: Payload contains both 'id' and 'link' in 'document'.
     """
     client = DummyClient()
-    payload = client._build_document_payload(media_id="mediaid", media_link="http://example.com/doc.pdf")
+    payload = client._build_document_payload(
+        media_id="mediaid", media_link="http://example.com/doc.pdf"
+    )
     assert payload["document"]["id"] == "mediaid"
     assert payload["document"]["link"] == "http://example.com/doc.pdf"
+
 
 def test_build_document_payload_with_caption_and_filename():
     """
@@ -56,9 +64,12 @@ def test_build_document_payload_with_caption_and_filename():
     Output: Payload contains caption and filename in 'document'.
     """
     client = DummyClient()
-    payload = client._build_document_payload(media_id="mediaid", caption="My Doc", filename="file.pdf")
+    payload = client._build_document_payload(
+        media_id="mediaid", caption="My Doc", filename="file.pdf"
+    )
     assert payload["document"]["caption"] == "My Doc"
     assert payload["document"]["filename"] == "file.pdf"
+
 
 def test_build_document_payload_empty_media_id():
     """
@@ -69,6 +80,7 @@ def test_build_document_payload_empty_media_id():
     client = DummyClient()
     with pytest.raises(ValueError):
         client._build_document_payload(media_id="")
+
 
 def test_build_document_payload_empty_media_link():
     """

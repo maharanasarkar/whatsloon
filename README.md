@@ -49,6 +49,7 @@ Async:
 import asyncio
 from whatsloon import WhatsAppCloudAPIClient
 
+
 async def main():
     client = WhatsAppCloudAPIClient(
         access_token="YOUR_API_KEY",
@@ -58,6 +59,7 @@ async def main():
     )
     print(await client.async_send_text_message("Hello async!"))
 
+
 asyncio.run(main())
 ```
 
@@ -65,6 +67,7 @@ Custom client with only needed features:
 
 ```python
 from whatsloon import WhatsAppBaseClient, TextSender, ImageSender
+
 
 class MyClient(WhatsAppBaseClient, TextSender, ImageSender):
     pass

@@ -4,13 +4,16 @@ Module for sending interactive Flow messages via WhatsApp Cloud API.
 This module defines the FlowSender class, which provides methods to build payloads and send interactive flow messages using the WhatsApp Cloud API.
 """
 
-from typing import Any, Dict, Optional
-import requests
-import httpx
 import logging
+from typing import Any, Dict, Optional
+
+import httpx
+import requests
+
+from whatsloon.base import LegacyMixinBase
 
 
-class FlowSender:
+class FlowSender(LegacyMixinBase):
     """
     Mixin class for sending interactive Flow messages via WhatsApp Cloud API.
 
@@ -48,7 +51,7 @@ class FlowSender:
         Returns:
             Dict[str, Any]: The payload dictionary for the WhatsApp API request.
         """
-        interactive = {
+        interactive: Dict[str, Any] = {
             "type": "flow",
             "action": {
                 "name": "flow",
@@ -88,9 +91,7 @@ class FlowSender:
         Returns:
             requests.Response: The response object from the API.
         """
-        return requests.post(
-            url=self.base_url, headers=self.headers, json=payload, timeout=10
-        )
+        return requests.post(url=self.base_url, headers=self.headers, json=payload, timeout=10)
 
     async def _async_send_request(self, payload: Dict[str, Any]) -> httpx.Response:
         """
@@ -221,4 +222,3 @@ class FlowSender:
         except Exception as err:
             self.logger.error(f"An error occurred: {err}")
             return {"success": False, "error": str(err)}
-
