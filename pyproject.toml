@@ -112,7 +112,7 @@ source = ["whatsloon"]
 branch = true
 
 [tool.coverage.report]
-fail_under = 45
+fail_under = 70
 show_missing = true
 skip_covered = false
 

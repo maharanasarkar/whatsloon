@@ -23,9 +23,11 @@ def _load(version, name):
 
 def test_cross_version_text_serialization():
     """Same domain operation serializes per version with stable core fields."""
-    v19 = get_adapter("v19.0").build_text_payload(to="919876543210", body="Hi")
-    v26 = get_adapter("v26.0").build_text_payload(to="919876543210", body="Hi")
-    for payload in (v19, v26):
+    payloads = [
+        get_adapter(version).build_text_payload(to="919876543210", body="Hi")
+        for version in ("v19.0", "v20.0", "v26.0")
+    ]
+    for payload in payloads:
         assert payload["messaging_product"] == "whatsapp"
         assert payload["to"] == "919876543210"
         assert payload["text"]["body"] == "Hi"
@@ -35,6 +37,7 @@ def test_success_fixtures_normalize_message_id():
     """Success fixtures yield message IDs and preserve unknown fields."""
     for version, dirname, fixture, expected in (
         ("v19.0", "v19", "text_send_success.json", "wamid.v19-text-1"),
+        ("v20.0", "v20", "text_send_success.json", "wamid.v20-text-1"),
         ("v26.0", "v26", "text_send_success.json", "wamid.v26-text-1"),
     ):
         adapter = get_adapter(version)

@@ -29,6 +29,7 @@ class VersionCapabilities(BaseModel):
 
 CAPABILITIES: dict[str, VersionCapabilities] = {
     "v19.0": VersionCapabilities(),
+    "v20.0": VersionCapabilities(),
     "v26.0": VersionCapabilities(calls=True, groups=True, direct_send=True),
 }
 """Capability map keyed by canonical version string."""
