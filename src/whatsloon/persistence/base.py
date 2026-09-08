@@ -6,6 +6,7 @@ idempotency keys and event hashes as safe no-ops.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Optional, Protocol
 
 from whatsloon.persistence.models import (
@@ -15,9 +16,6 @@ from whatsloon.persistence.models import (
     MessageStatus,
     WebhookEvent,
 )
-
-
-from dataclasses import dataclass
 
 
 @dataclass

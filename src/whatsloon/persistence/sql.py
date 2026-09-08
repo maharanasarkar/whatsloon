@@ -18,15 +18,10 @@ except ImportError as exc:  # pragma: no cover
         "SQL persistence requires the 'sql' extra: pip install 'whatsloon[sql]'."
     ) from exc
 
-from whatsloon.persistence.base import EventFilter, MessageFilter
+from whatsloon.persistence.base import MessageFilter
 from whatsloon.persistence.models import (
-    Conversation,
-    MediaMetadata,
     Message,
     MessageStatus,
-    ProcessingStatus,
-    WebhookEvent,
-    utcnow,
 )
 
 

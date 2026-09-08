@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from whatsloon.business.models import PhoneNumber, WhatsAppBusinessAccount
 from whatsloon.transport.async_ import AsyncTransport
 from whatsloon.transport.request import Request

@@ -4,10 +4,11 @@ Module for sending interactive List messages via WhatsApp Cloud API.
 This module defines the ListSender class, which provides methods to build payloads and send interactive list messages using the WhatsApp Cloud API.
 """
 
-from typing import Any, Dict, List, Optional
-import requests
-import httpx
 import logging
+from typing import Any, Dict, List, Optional
+
+import httpx
+import requests
 
 
 class ListSender:
@@ -85,9 +86,7 @@ class ListSender:
         Returns:
             requests.Response: The response object from the API.
         """
-        return requests.post(
-            url=self.base_url, headers=self.headers, json=payload, timeout=10
-        )
+        return requests.post(url=self.base_url, headers=self.headers, json=payload, timeout=10)
 
     async def _async_send_request(self, payload: Dict[str, Any]) -> httpx.Response:
         """
@@ -194,4 +193,3 @@ class ListSender:
         except Exception as err:
             self.logger.error(f"An error occurred: {err}")
             return {"success": False, "error": str(err)}
-

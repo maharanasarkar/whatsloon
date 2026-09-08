@@ -11,7 +11,6 @@ import warnings
 from dataclasses import dataclass
 from typing import ClassVar, Optional
 
-
 LATEST_VERSION: str = "v26.0"
 """Pinned current adapter; the ``latest`` alias resolves here."""
 

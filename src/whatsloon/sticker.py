@@ -4,10 +4,11 @@ Module for sending sticker messages via WhatsApp Cloud API.
 This module defines the StickerSender class, which provides methods to build payloads and send sticker messages using the WhatsApp Cloud API.
 """
 
-from typing import Any, Dict, Optional
-import requests
-import httpx
 import logging
+from typing import Any, Dict, Optional
+
+import httpx
+import requests
 
 
 class StickerSender:
@@ -61,9 +62,7 @@ class StickerSender:
         Returns:
             requests.Response: The response object from the API.
         """
-        return requests.post(
-            url=self.base_url, headers=self.headers, json=payload, timeout=10
-        )
+        return requests.post(url=self.base_url, headers=self.headers, json=payload, timeout=10)
 
     async def _async_send_request(self, payload: Dict[str, Any]) -> httpx.Response:
         """
@@ -152,4 +151,3 @@ class StickerSender:
         except Exception as err:
             self.logger.error(f"An error occurred: {err}")
             return {"success": False, "error": str(err)}
-

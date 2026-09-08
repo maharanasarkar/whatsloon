@@ -5,10 +5,11 @@ This module defines the AddressSender class, which provides methods to
 build payloads and send address messages using the WhatsApp Cloud API.
 """
 
-from typing import Any, Dict
-import requests
-import httpx
 import logging
+from typing import Any, Dict
+
+import httpx
+import requests
 
 
 class AddressSender:
@@ -94,9 +95,7 @@ class AddressSender:
         Returns:
             requests.Response: The response object from the API.
         """
-        return requests.post(
-            url=self.base_url, headers=self.headers, json=payload, timeout=10
-        )
+        return requests.post(url=self.base_url, headers=self.headers, json=payload, timeout=10)
 
     async def _async_send_request(self, payload: Dict[str, Any]) -> httpx.Response:
         """

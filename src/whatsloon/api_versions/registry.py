@@ -13,7 +13,6 @@ from whatsloon.api_versions.v19_0.adapter import V19Adapter
 from whatsloon.api_versions.v26_0.adapter import V26Adapter
 from whatsloon.config.versions import LATEST_VERSION, SUPPORTED_VERSIONS, GraphAPIVersion
 
-
 _ADAPTERS: dict[str, type[VersionAdapter]] = {
     "v19.0": V19Adapter,
     "v26.0": V26Adapter,

@@ -7,7 +7,7 @@ the adapter; it never branches on raw version strings.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from whatsloon.config.capabilities import VersionCapabilities
 from whatsloon.exceptions import APIError

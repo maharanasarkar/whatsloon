@@ -4,10 +4,11 @@ Module for sending video messages via WhatsApp Cloud API.
 This module defines the VideoSender class, which provides methods to build payloads and send video messages using the WhatsApp Cloud API.
 """
 
-from typing import Any, Dict, Optional
-import requests
-import httpx
 import logging
+from typing import Any, Dict, Optional
+
+import httpx
+import requests
 
 
 class VideoSender:
@@ -65,9 +66,7 @@ class VideoSender:
         Returns:
             requests.Response: The response object from the API.
         """
-        return requests.post(
-            url=self.base_url, headers=self.headers, json=payload, timeout=10
-        )
+        return requests.post(url=self.base_url, headers=self.headers, json=payload, timeout=10)
 
     async def _async_send_request(self, payload: Dict[str, Any]) -> httpx.Response:
         """
@@ -105,7 +104,9 @@ class VideoSender:
         Example:
             >>> client.send_video_message(media_id="1166846181421424", caption="A succulent eclipse!")
         """
-        payload = self._build_video_payload(media_id=media_id, media_link=media_link, caption=caption)
+        payload = self._build_video_payload(
+            media_id=media_id, media_link=media_link, caption=caption
+        )
         try:
             response = self._send_request(payload)
             response.raise_for_status()
@@ -143,7 +144,9 @@ class VideoSender:
         Example:
             >>> await client.async_send_video_message(media_id="1166846181421424", caption="A succulent eclipse!")
         """
-        payload = self._build_video_payload(media_id=media_id, media_link=media_link, caption=caption)
+        payload = self._build_video_payload(
+            media_id=media_id, media_link=media_link, caption=caption
+        )
         try:
             response = await self._async_send_request(payload)
             response.raise_for_status()
@@ -160,4 +163,3 @@ class VideoSender:
         except Exception as err:
             self.logger.error(f"An error occurred: {err}")
             return {"success": False, "error": str(err)}
-

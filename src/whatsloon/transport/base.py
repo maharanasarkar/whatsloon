@@ -7,24 +7,22 @@ Domain code never touches HTTP directly. Sync and async transports reuse
 from __future__ import annotations
 
 import logging
-import time
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
 import httpx
 
-from whatsloon.config.retry import backoff_delay, is_retryable_status, parse_retry_after
+from whatsloon.config.retry import backoff_delay, parse_retry_after
 from whatsloon.config.settings import RetryConfig
 from whatsloon.exceptions import (
     APIError,
     AuthenticationError,
     AuthorizationError,
-    ConnectError,
     ConflictError,
+    ConnectError,
     NotFoundError,
     RateLimitError,
     ServerError,
-    TLSProxyError,
     TransportError,
     TransportTimeoutError,
     ValidationAPIError,

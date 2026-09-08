@@ -66,9 +66,7 @@ class WhatsAppBaseClient:
                 )
             recipient_country_code = recipient_country_code.strip().lstrip("+")
         recipient_mobile_number = recipient_mobile_number.strip().lstrip("+")
-        if not recipient_mobile_number.isdigit() or not (
-            6 <= len(recipient_mobile_number) <= 15
-        ):
+        if not recipient_mobile_number.isdigit() or not (6 <= len(recipient_mobile_number) <= 15):
             raise ValueError(
                 "recipient_mobile_number must be 6–15 digits, optionally prefixed with '+'."
             )
@@ -85,14 +83,13 @@ class WhatsAppBaseClient:
         )
 
         self.api_version = api_version.strip()
-        self.base_url = f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages"
+        self.base_url = (
+            f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages"
+        )
         self.headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
 
     def __repr__(self):
-        return (
-            f"<WhatsAppBaseClient to={self.recipient_to_send} "
-            f"version={self.api_version}>"
-        )
+        return f"<WhatsAppBaseClient to={self.recipient_to_send} version={self.api_version}>"

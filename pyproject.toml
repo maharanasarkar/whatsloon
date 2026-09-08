@@ -127,7 +127,6 @@ ignore = ["E501"]
 # Tighten to UP, B, C4, SIM during SDK core revamp; legacy mixins use Dict/List/Optional.
 
 [tool.ruff.lint.per-file-ignores]
-"src/whatsloon/*.py" = ["I001", "F401", "W291", "W293"]
 "tests/*.py" = ["I001", "E402", "E501", "F401"]
 
 [tool.ruff.lint.isort]

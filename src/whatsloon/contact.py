@@ -4,10 +4,11 @@ Module for sending contact messages via WhatsApp Cloud API.
 This module defines the ContactSender class, which provides methods to build payloads and send contact messages using the WhatsApp Cloud API.
 """
 
-from typing import Any, Dict, List
-import requests
-import httpx
 import logging
+from typing import Any, Dict, List
+
+import httpx
+import requests
 
 
 class ContactSender:
@@ -52,9 +53,7 @@ class ContactSender:
         Returns:
             requests.Response: The response object from the API.
         """
-        return requests.post(
-            url=self.base_url, headers=self.headers, json=payload, timeout=10
-        )
+        return requests.post(url=self.base_url, headers=self.headers, json=payload, timeout=10)
 
     async def _async_send_request(self, payload: Dict[str, Any]) -> httpx.Response:
         """
