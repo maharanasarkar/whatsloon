@@ -1,11 +1,13 @@
 import pytest
 from whatsloon.contact import ContactSender
 
+
 class DummyClient(ContactSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_contact_payload():
     """
@@ -19,6 +21,7 @@ def test_build_contact_payload():
     assert payload["type"] == "contacts"
     assert payload["contacts"] == contacts
 
+
 def test_build_contact_payload_error():
     """
     Test error when contacts list is empty.
@@ -28,6 +31,7 @@ def test_build_contact_payload_error():
     client = DummyClient()
     with pytest.raises(ValueError):
         client._build_contact_payload([])
+
 
 def test_build_contact_payload_not_a_list():
     """
@@ -39,6 +43,7 @@ def test_build_contact_payload_not_a_list():
     with pytest.raises(ValueError):
         client._build_contact_payload({"name": {"first_name": "Jane"}})
 
+
 def test_build_contact_payload_multiple_contacts():
     """
     Test building contact payload with multiple contacts.
@@ -48,7 +53,7 @@ def test_build_contact_payload_multiple_contacts():
     client = DummyClient()
     contacts = [
         {"name": {"first_name": "John"}, "phones": [{"phone": "123"}]},
-        {"name": {"first_name": "Jane"}, "phones": [{"phone": "456"}]}
+        {"name": {"first_name": "Jane"}, "phones": [{"phone": "456"}]},
     ]
     payload = client._build_contact_payload(contacts)
     assert payload["contacts"] == contacts

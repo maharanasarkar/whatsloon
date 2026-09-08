@@ -1,11 +1,13 @@
 import pytest
 from whatsloon.address import AddressSender
 
+
 class DummyClient(AddressSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_address_payload():
     """
@@ -14,9 +16,7 @@ def test_build_address_payload():
     Output: Payload contains correct WhatsApp fields and action name.
     """
     client = DummyClient()
-    payload = client._build_address_payload(
-        body="Address body", country_iso_code="IN"
-    )
+    payload = client._build_address_payload(body="Address body", country_iso_code="IN")
     assert payload["messaging_product"] == "whatsapp"
     assert payload["to"] == "1234567890"
     assert payload["type"] == "interactive"
@@ -37,7 +37,7 @@ def test_build_address_payload_with_all_fields():
         footer="Footer text",
         values={"name": "John", "phone_number": "555-1234", "address": "123 Main St"},
         validation_errors={"in_pin_code": "Invalid pin code"},
-        saved_addresses=[{"id": "1", "address": "Old Address"}]
+        saved_addresses=[{"id": "1", "address": "Old Address"}],
     )
     assert payload["interactive"]["header"] == {"type": "text", "text": "Header text"}
     assert payload["interactive"]["footer"] == {"text": "Footer text", "type": "text"}
@@ -46,6 +46,7 @@ def test_build_address_payload_with_all_fields():
     assert params["values"]["name"] == "John"
     assert params["validation_errors"]["in_pin_code"] == "Invalid pin code"
     assert params["saved_addresses"][0]["address"] == "Old Address"
+
 
 def test_build_address_payload_missing_body():
     """
@@ -57,6 +58,7 @@ def test_build_address_payload_missing_body():
     with pytest.raises(TypeError):
         client._build_address_payload(country_iso_code="IN")
 
+
 def test_build_address_payload_missing_country():
     """
     Test missing required 'country_iso_code' argument.
@@ -67,6 +69,7 @@ def test_build_address_payload_missing_country():
     with pytest.raises(TypeError):
         client._build_address_payload(body="Address body")
 
+
 def test_build_address_payload_empty_values():
     """
     Test empty values dict.
@@ -76,6 +79,7 @@ def test_build_address_payload_empty_values():
     client = DummyClient()
     payload = client._build_address_payload(body="Body", country_iso_code="IN", values={})
     assert "values" not in payload["interactive"]["action"]["parameters"]
+
 
 def test_build_address_payload_empty_saved_addresses():
     """

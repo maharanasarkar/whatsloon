@@ -1,11 +1,13 @@
 import pytest
 from whatsloon.location import LocationSender
 
+
 class DummyClient(LocationSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_location_payload():
     """
@@ -21,6 +23,7 @@ def test_build_location_payload():
     assert payload["location"]["name"] == "SF"
     assert payload["location"]["address"] == "CA"
 
+
 def test_build_location_payload_latitude_error():
     """
     Test error when latitude is out of range.
@@ -31,6 +34,7 @@ def test_build_location_payload_latitude_error():
     with pytest.raises(ValueError):
         client._build_location_payload(100, 0)
 
+
 def test_build_location_payload_longitude_error():
     """
     Test error when longitude is out of range.
@@ -40,6 +44,7 @@ def test_build_location_payload_longitude_error():
     client = DummyClient()
     with pytest.raises(ValueError):
         client._build_location_payload(0, 200)
+
 
 def test_build_location_payload_minimal():
     """
@@ -55,6 +60,7 @@ def test_build_location_payload_minimal():
     assert "name" not in payload["location"]
     assert "address" not in payload["location"]
 
+
 def test_build_location_payload_missing_latitude():
     """
     Test error when latitude is missing.
@@ -64,6 +70,7 @@ def test_build_location_payload_missing_latitude():
     client = DummyClient()
     with pytest.raises(TypeError):
         client._build_location_payload(longitude=56.78)
+
 
 def test_build_location_payload_missing_longitude():
     """

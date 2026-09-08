@@ -1,10 +1,12 @@
 from whatsloon.flow import FlowSender
 
+
 class DummyClient(FlowSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_flow_payload():
     """
@@ -21,6 +23,7 @@ def test_build_flow_payload():
     assert payload["type"] == "interactive"
     assert payload["interactive"]["action"]["name"] == "flow"
 
+
 def test_build_flow_payload_with_all_fields():
     """
     Test building flow payload with all optional fields.
@@ -29,14 +32,21 @@ def test_build_flow_payload_with_all_fields():
     """
     client = DummyClient()
     payload = client._build_flow_payload(
-        flow_token="token", flow_id="id", flow_cta="cta", flow_action="navigate",
-        flow_message_version="4", body_text="Body", header={"type": "text", "text": "Header"},
-        footer_text="Footer", flow_action_payload={"key": "value"}
+        flow_token="token",
+        flow_id="id",
+        flow_cta="cta",
+        flow_action="navigate",
+        flow_message_version="4",
+        body_text="Body",
+        header={"type": "text", "text": "Header"},
+        footer_text="Footer",
+        flow_action_payload={"key": "value"},
     )
     assert payload["interactive"]["header"] == {"type": "text", "text": "Header"}
     assert payload["interactive"]["body"]["text"] == "Body"
     assert payload["interactive"]["footer"]["text"] == "Footer"
     assert payload["interactive"]["action"]["parameters"]["flow_action_payload"] == {"key": "value"}
+
 
 def test_build_flow_payload_missing_token():
     """
@@ -52,6 +62,7 @@ def test_build_flow_payload_missing_token():
     else:
         assert False, "TypeError not raised for missing flow_token"
 
+
 def test_build_flow_payload_missing_flow_id():
     """
     Test error when flow_id is missing.
@@ -66,6 +77,7 @@ def test_build_flow_payload_missing_flow_id():
     else:
         assert False, "TypeError not raised for missing flow_id"
 
+
 def test_build_flow_payload_missing_cta():
     """
     Test error when flow_cta is missing.
@@ -79,6 +91,7 @@ def test_build_flow_payload_missing_cta():
         pass
     else:
         assert False, "TypeError not raised for missing flow_cta"
+
 
 def test_build_flow_payload_missing_action():
     """

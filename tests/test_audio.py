@@ -1,11 +1,13 @@
 import pytest
 from whatsloon.audio import AudioSender
 
+
 class DummyClient(AudioSender):
     def __init__(self):
         self.recipient_to_send = "1234567890"
         self.base_url = "https://graph.facebook.com/v19.0/1234567890/messages"
         self.headers = {"Authorization": "Bearer testtoken"}
+
 
 def test_build_audio_payload_media_id():
     """
@@ -18,6 +20,7 @@ def test_build_audio_payload_media_id():
     assert payload["type"] == "audio"
     assert payload["audio"]["id"] == "mediaid"
 
+
 def test_build_audio_payload_media_link():
     """
     Test building audio payload with only media_link provided.
@@ -27,6 +30,7 @@ def test_build_audio_payload_media_link():
     client = DummyClient()
     payload = client._build_audio_payload(media_link="http://example.com/audio.mp3")
     assert payload["audio"]["link"] == "http://example.com/audio.mp3"
+
 
 def test_build_audio_payload_error():
     """
@@ -38,6 +42,7 @@ def test_build_audio_payload_error():
     with pytest.raises(ValueError):
         client._build_audio_payload()
 
+
 def test_build_audio_payload_both_fields():
     """
     Test building audio payload with both media_id and media_link provided.
@@ -45,9 +50,12 @@ def test_build_audio_payload_both_fields():
     Output: Payload contains both 'id' and 'link' in 'audio'.
     """
     client = DummyClient()
-    payload = client._build_audio_payload(media_id="mediaid", media_link="http://example.com/audio.mp3")
+    payload = client._build_audio_payload(
+        media_id="mediaid", media_link="http://example.com/audio.mp3"
+    )
     assert payload["audio"]["id"] == "mediaid"
     assert payload["audio"]["link"] == "http://example.com/audio.mp3"
+
 
 def test_build_audio_payload_empty_media_id():
     """
@@ -58,6 +66,7 @@ def test_build_audio_payload_empty_media_id():
     client = DummyClient()
     with pytest.raises(ValueError):
         client._build_audio_payload(media_id="")
+
 
 def test_build_audio_payload_empty_media_link():
     """

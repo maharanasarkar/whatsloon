@@ -1,6 +1,7 @@
 import pytest
 from whatsloon.base import WhatsAppBaseClient
 
+
 def test_valid_initialization():
     """
     Test valid initialization with all required arguments.
@@ -12,11 +13,12 @@ def test_valid_initialization():
         phone_number_id="1234567890",
         recipient_mobile_number="9876543210",
         recipient_country_code="91",
-        api_version="v19.0"
+        api_version="v19.0",
     )
     assert client.recipient_to_send == "919876543210"
     assert client.base_url.endswith("/1234567890/messages")
     assert client.headers["Authorization"] == "Bearer token"
+
 
 def test_valid_initialization_with_plus():
     """
@@ -29,9 +31,10 @@ def test_valid_initialization_with_plus():
         phone_number_id="1234567890",
         recipient_mobile_number="+9876543210",
         recipient_country_code="+91",
-        api_version="v19.0"
+        api_version="v19.0",
     )
     assert client.recipient_to_send == "919876543210"
+
 
 def test_valid_initialization_no_country_code():
     """
@@ -43,9 +46,10 @@ def test_valid_initialization_no_country_code():
         access_token="token",
         phone_number_id="1234567890",
         recipient_mobile_number="9876543210",
-        api_version="v19.0"
+        api_version="v19.0",
     )
     assert client.recipient_to_send == "9876543210"
+
 
 def test_invalid_access_token():
     """
@@ -55,10 +59,9 @@ def test_invalid_access_token():
     """
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
-            access_token=" ",
-            phone_number_id="1234567890",
-            recipient_mobile_number="9876543210"
+            access_token=" ", phone_number_id="1234567890", recipient_mobile_number="9876543210"
         )
+
 
 def test_invalid_phone_number_id():
     """
@@ -68,10 +71,9 @@ def test_invalid_phone_number_id():
     """
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
-            access_token="token",
-            phone_number_id=" ",
-            recipient_mobile_number="9876543210"
+            access_token="token", phone_number_id=" ", recipient_mobile_number="9876543210"
         )
+
 
 def test_invalid_mobile_number_type():
     """
@@ -81,10 +83,9 @@ def test_invalid_mobile_number_type():
     """
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
-            access_token="token",
-            phone_number_id="1234567890",
-            recipient_mobile_number="notanumber"
+            access_token="token", phone_number_id="1234567890", recipient_mobile_number="notanumber"
         )
+
 
 def test_invalid_mobile_number_length():
     """
@@ -94,10 +95,9 @@ def test_invalid_mobile_number_length():
     """
     with pytest.raises(ValueError):
         WhatsAppBaseClient(
-            access_token="token",
-            phone_number_id="1234567890",
-            recipient_mobile_number="123"
+            access_token="token", phone_number_id="1234567890", recipient_mobile_number="123"
         )
+
 
 def test_invalid_country_code_type():
     """
@@ -110,8 +110,9 @@ def test_invalid_country_code_type():
             access_token="token",
             phone_number_id="1234567890",
             recipient_mobile_number="9876543210",
-            recipient_country_code=123
+            recipient_country_code=123,
         )
+
 
 def test_invalid_country_code_format():
     """
@@ -124,8 +125,9 @@ def test_invalid_country_code_format():
             access_token="token",
             phone_number_id="1234567890",
             recipient_mobile_number="9876543210",
-            recipient_country_code="abc"
+            recipient_country_code="abc",
         )
+
 
 def test_invalid_api_version():
     """
@@ -138,8 +140,9 @@ def test_invalid_api_version():
             access_token="token",
             phone_number_id="1234567890",
             recipient_mobile_number="9876543210",
-            api_version=" "
+            api_version=" ",
         )
+
 
 def test_base_client_init():
     """
@@ -156,6 +159,7 @@ def test_base_client_init():
     assert client.recipient_to_send == "919876543210"
     assert client.base_url.startswith("https://graph.facebook.com/")
     assert "Authorization" in client.headers
+
 
 def test_base_client_missing_token():
     """
@@ -174,6 +178,7 @@ def test_base_client_missing_token():
     else:
         assert False, "TypeError not raised for missing access_token"
 
+
 def test_base_client_missing_phone_number_id():
     """
     Test missing phone_number_id argument.
@@ -190,6 +195,7 @@ def test_base_client_missing_phone_number_id():
         pass
     else:
         assert False, "TypeError not raised for missing phone_number_id"
+
 
 def test_base_client_invalid_country_code():
     """

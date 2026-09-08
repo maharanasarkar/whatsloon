@@ -32,7 +32,9 @@ from whatsloon.messages.models import OutboundMessage, TextMessage
 from whatsloon.reliability import BulkSender
 
 sender = BulkSender(wa.messages, max_workers=5, limiter=limiter, breaker=breaker)
-summary = sender.send_all([OutboundMessage(to=to, content=TextMessage(body="Hi")) for to in recipients])
+summary = sender.send_all(
+    [OutboundMessage(to=to, content=TextMessage(body="Hi")) for to in recipients]
+)
 print(summary.sent, summary.failed)
 ```
 
