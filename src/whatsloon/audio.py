@@ -10,8 +10,10 @@ from typing import Any, Dict, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class AudioSender:
+
+class AudioSender(LegacyMixinBase):
     """
     Mixin class for sending audio messages via WhatsApp Cloud API.
 

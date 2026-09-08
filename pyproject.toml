@@ -61,7 +61,7 @@ dev = [
   "whatsloon[test]",
   "ruff>=0.4",
   "black>=24",
-  "mypy>=1.10",
+  "mypy>=1.10,<2",
   "pre-commit>=3",
   "build>=1",
   "twine>=5",

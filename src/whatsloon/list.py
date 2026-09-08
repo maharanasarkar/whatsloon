@@ -10,8 +10,10 @@ from typing import Any, Dict, List, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class ListSender:
+
+class ListSender(LegacyMixinBase):
     """
     Mixin class for sending interactive List messages via WhatsApp Cloud API.
 

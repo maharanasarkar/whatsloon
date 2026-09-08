@@ -10,8 +10,10 @@ from typing import Any, Dict
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class LocationRequestSender:
+
+class LocationRequestSender(LegacyMixinBase):
     """
     Mixin class for sending location request messages via WhatsApp Cloud API.
 

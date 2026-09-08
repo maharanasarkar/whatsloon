@@ -10,8 +10,10 @@ from typing import Any, Dict, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class LocationSender:
+
+class LocationSender(LegacyMixinBase):
     """
     Mixin class for sending location messages via WhatsApp Cloud API.
 
@@ -45,7 +47,7 @@ class LocationSender:
             raise ValueError("Latitude must be between -90 and 90.")
         if not (-180 <= longitude <= 180):
             raise ValueError("Longitude must be between -180 and 180.")
-        location = {
+        location: Dict[str, Any] = {
             "latitude": latitude,
             "longitude": longitude,
         }

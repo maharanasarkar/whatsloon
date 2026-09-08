@@ -10,8 +10,10 @@ from typing import Any, Dict, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class CTASender:
+
+class CTASender(LegacyMixinBase):
     """
     Mixin class for sending interactive CTA URL button messages via WhatsApp Cloud API.
 

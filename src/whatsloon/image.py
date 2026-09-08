@@ -10,8 +10,10 @@ from typing import Any, Dict, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class ImageSender:
+
+class ImageSender(LegacyMixinBase):
     """
     Mixin class for sending image messages via WhatsApp Cloud API.
 

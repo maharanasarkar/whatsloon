@@ -85,3 +85,6 @@ logs/
 
 # Temporary files
 refactor_specs/
+
+# Local agent tooling
+.opencode/

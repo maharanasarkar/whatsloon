@@ -10,8 +10,10 @@ from typing import Any, Dict, List, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class TemplateSender:
+
+class TemplateSender(LegacyMixinBase):
     """
     Mixin class for sending template messages via WhatsApp Cloud API.
 
@@ -39,7 +41,7 @@ class TemplateSender:
         Returns:
             Dict[str, Any]: The payload dictionary for the WhatsApp API request.
         """
-        template = {
+        template: Dict[str, Any] = {
             "name": template_name,
             "language": {"code": language_code},
         }

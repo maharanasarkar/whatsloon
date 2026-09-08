@@ -2,6 +2,24 @@ import re
 from typing import Optional
 
 
+class LegacyMixinBase:
+    """Shared base providing type declarations for legacy mixins.
+
+    Legacy sender mixins (e.g. TextSender, ImageSender) are composed with
+    WhatsAppBaseClient at runtime via multiple inheritance. They access
+    attributes initialized by WhatsAppBaseClient.__init__.
+
+    Attributes:
+        recipient_to_send: Full recipient number including country code.
+        base_url: Base URL for the WhatsApp Cloud API endpoint.
+        headers: HTTP headers for API requests.
+    """
+
+    recipient_to_send: str
+    base_url: str
+    headers: dict[str, str]
+
+
 class WhatsAppBaseClient:
     """
     A user-friendly Python wrapper for the WhatsApp Cloud API.

@@ -10,8 +10,10 @@ from typing import Any, Dict, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class FlowSender:
+
+class FlowSender(LegacyMixinBase):
     """
     Mixin class for sending interactive Flow messages via WhatsApp Cloud API.
 
@@ -49,7 +51,7 @@ class FlowSender:
         Returns:
             Dict[str, Any]: The payload dictionary for the WhatsApp API request.
         """
-        interactive = {
+        interactive: Dict[str, Any] = {
             "type": "flow",
             "action": {
                 "name": "flow",

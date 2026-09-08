@@ -10,8 +10,10 @@ from typing import Any, Dict, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class StickerSender:
+
+class StickerSender(LegacyMixinBase):
     """
     Mixin class for sending sticker messages via WhatsApp Cloud API.
 

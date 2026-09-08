@@ -9,8 +9,10 @@ from typing import Any, Dict
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class TypingIndicator:
+
+class TypingIndicator(LegacyMixinBase):
     """
     Mixin class for sending typing indicators (on/off) via WhatsApp Cloud API.
 

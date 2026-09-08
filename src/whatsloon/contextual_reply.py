@@ -10,8 +10,10 @@ from typing import Any, Dict
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class ContextualReply:
+
+class ContextualReply(LegacyMixinBase):
     """
     Mixin class for sending contextual reply messages via WhatsApp Cloud API.
 

@@ -10,8 +10,10 @@ from typing import Any, Dict, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class DocumentSender:
+
+class DocumentSender(LegacyMixinBase):
     """
     Mixin class for sending document messages via WhatsApp Cloud API.
 

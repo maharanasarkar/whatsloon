@@ -10,8 +10,10 @@ from typing import Any, Dict
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class ReactionSender:
+
+class ReactionSender(LegacyMixinBase):
     """
     Mixin class for sending reaction messages via WhatsApp Cloud API.
 

@@ -10,8 +10,10 @@ from typing import Any, Dict, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class VideoSender:
+
+class VideoSender(LegacyMixinBase):
     """
     Mixin class for sending video messages via WhatsApp Cloud API.
 

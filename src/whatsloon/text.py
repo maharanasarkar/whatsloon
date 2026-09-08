@@ -11,8 +11,10 @@ from typing import Any, Dict
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class TextSender:
+
+class TextSender(LegacyMixinBase):
     """
     Mixin class for sending text messages via WhatsApp Cloud API.
 

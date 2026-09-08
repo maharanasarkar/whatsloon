@@ -6,13 +6,15 @@ build payloads and send address messages using the WhatsApp Cloud API.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class AddressSender:
+
+class AddressSender(LegacyMixinBase):
     """
     Mixin class for sending address (interactive) messages via WhatsApp Cloud API.
 
@@ -33,11 +35,11 @@ class AddressSender:
         self,
         body: str,
         country_iso_code: str,
-        header: str = None,
-        footer: str = None,
-        values: dict = None,
-        validation_errors: dict = None,
-        saved_addresses: list = None,
+        header: Optional[str] = None,
+        footer: Optional[str] = None,
+        values: Optional[dict] = None,
+        validation_errors: Optional[dict] = None,
+        saved_addresses: Optional[list] = None,
     ) -> Dict[str, Any]:
         """
         Build the payload for sending an address (interactive) message.
@@ -54,7 +56,7 @@ class AddressSender:
         Returns:
             Dict[str, Any]: The payload dictionary for the WhatsApp API request.
         """
-        parameters = {"country": country_iso_code}
+        parameters: Dict[str, Any] = {"country": country_iso_code}
         if values:
             parameters["values"] = values
         if validation_errors:
@@ -117,11 +119,11 @@ class AddressSender:
         self,
         body: str,
         country_iso_code: str,
-        header: str = None,
-        footer: str = None,
-        values: dict = None,
-        validation_errors: dict = None,
-        saved_addresses: list = None,
+        header: Optional[str] = None,
+        footer: Optional[str] = None,
+        values: Optional[dict] = None,
+        validation_errors: Optional[dict] = None,
+        saved_addresses: Optional[list] = None,
     ) -> Dict[str, Any]:
         """
         Send an address (interactive) message to the recipient via WhatsApp Cloud API (synchronous).
@@ -168,11 +170,11 @@ class AddressSender:
         self,
         body: str,
         country_iso_code: str,
-        header: str = None,
-        footer: str = None,
-        values: dict = None,
-        validation_errors: dict = None,
-        saved_addresses: list = None,
+        header: Optional[str] = None,
+        footer: Optional[str] = None,
+        values: Optional[dict] = None,
+        validation_errors: Optional[dict] = None,
+        saved_addresses: Optional[list] = None,
     ) -> Dict[str, Any]:
         """
         Send an address (interactive) message to the recipient via WhatsApp Cloud API (asynchronous).

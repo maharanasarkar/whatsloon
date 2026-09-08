@@ -10,8 +10,10 @@ from typing import Any, Dict
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class ReadMark:
+
+class ReadMark(LegacyMixinBase):
     """
     Mixin class for marking messages as read via WhatsApp Cloud API.
 

@@ -10,8 +10,10 @@ from typing import Any, Dict, List, Optional
 import httpx
 import requests
 
+from whatsloon.base import LegacyMixinBase
 
-class ReplyButtonSender:
+
+class ReplyButtonSender(LegacyMixinBase):
     """
     Mixin class for sending interactive Reply Button messages via WhatsApp Cloud API.
 
