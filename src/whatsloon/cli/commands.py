@@ -16,6 +16,29 @@ WHATSAPP_APP_SECRET=your-app-secret
 WHATSAPP_VERIFY_TOKEN=your-verify-token
 """
 
+_SECRET_PATTERNS = (
+    re.compile(r"Bearer\s+[A-Za-z0-9._\-~+/=]+"),
+    re.compile(
+        r"(access_token|app_secret|verify_token|pin)\s*[:=]\s*['\"]?[^'\"\s,}]+", re.IGNORECASE
+    ),
+)
+"""Patterns redacted from CLI error output so secrets never reach logs."""
+
+
+def format_error(exc: BaseException) -> str:
+    """Render an exception for CLI output with secrets redacted.
+
+    Args:
+        exc: The failure.
+
+    Returns:
+        Type name plus redacted message.
+    """
+    message = str(exc)
+    for pattern in _SECRET_PATTERNS:
+        message = pattern.sub("***", message)
+    return f"{type(exc).__name__}: {message}"
+
 
 def load_env_file(path: Path) -> dict[str, str]:
     """Load KEY=VALUE pairs from a dotenv file without overriding env.
@@ -94,14 +117,14 @@ def cmd_doctor() -> int:
     try:
         client = build_client()
     except Exception as exc:
-        print(f"config: FAIL ({exc})")
+        print(f"config: FAIL ({format_error(exc)})")
         return 1
     print(f"config: OK (api_version={client.version.value}, latest={LATEST_VERSION})")
     try:
         number = client.business.get_phone_number(client.phone_number_id)
         print(f"connectivity: OK (display={number.display_phone_number or 'unknown'})")
     except Exception as exc:
-        print(f"connectivity: FAIL ({type(exc).__name__}: {exc})")
+        print(f"connectivity: FAIL ({format_error(exc)})")
         return 1
     finally:
         client.close()
@@ -123,7 +146,7 @@ def cmd_send(to: str, body: Optional[str], template: Optional[str], language: st
     try:
         client = build_client()
     except Exception as exc:
-        print(f"config: FAIL ({exc})")
+        print(f"config: FAIL ({format_error(exc)})")
         return 1
     try:
         if template:
@@ -138,7 +161,7 @@ def cmd_send(to: str, body: Optional[str], template: Optional[str], language: st
         print(f"sent: {result.message_id}")
         return 0
     except Exception as exc:
-        print(f"send: FAIL ({type(exc).__name__}: {exc})")
+        print(f"send: FAIL ({format_error(exc)})")
         return 1
     finally:
         client.close()
@@ -166,7 +189,7 @@ def cmd_webhook_verify(
     try:
         verify_signature(app_secret or None, raw, signature)
     except Exception as exc:
-        print(f"verify: FAIL ({type(exc).__name__}: {exc})")
+        print(f"verify: FAIL ({format_error(exc)})")
         return 1
     print("verify: OK")
     events = parse_body(raw)
@@ -200,7 +223,7 @@ def cmd_template(action: str, waba_id: str, name: str = "", language: str = "en_
     try:
         client = build_client()
     except Exception as exc:
-        print(f"config: FAIL ({exc})")
+        print(f"config: FAIL ({format_error(exc)})")
         return 1
     try:
         if action == "list":
@@ -218,7 +241,7 @@ def cmd_template(action: str, waba_id: str, name: str = "", language: str = "en_
             return 2
         return 0
     except Exception as exc:
-        print(f"template: FAIL ({type(exc).__name__}: {exc})")
+        print(f"template: FAIL ({format_error(exc)})")
         return 1
     finally:
         client.close()
