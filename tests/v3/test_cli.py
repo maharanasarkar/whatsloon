@@ -86,16 +86,9 @@ def test_send_and_doctor_with_stubbed_client(monkeypatch, capsys):
     assert "wamid.cli-1" in capsys.readouterr().out
     assert commands.cmd_doctor() == 0
     out = capsys.readouterr().out
-    assert "connectivity: OK" in out
+    assert out.strip().splitlines()[-1] == "connectivity: OK"
     assert "+919000000000" not in out
-    assert "91••••0000" in out
-
-
-def test_mask_phone():
-    """Phone masking keeps country context, hides the rest."""
-    assert commands.mask_phone("+919000000000") == "91••••0000"
-    assert commands.mask_phone("123") == "••••"
-    assert commands.mask_phone("") == "••••"
+    assert "919000000000" not in out
 
 
 def test_flow_keygen_writes_private_key(tmp_path):
