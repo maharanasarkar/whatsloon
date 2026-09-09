@@ -44,6 +44,13 @@ Filters submit as plain forms and upgrade to HTMX row swaps when JS runs,
 so pages work with and without JavaScript. Every page has labeled regions,
 a skip link, keyboard-native controls, and explicit empty and error states.
 
+## Threads, search, and pagination
+
+- Conversation IDs link to a chronological thread view (`/ui/conversations/{id}`).
+- The messages page searches content substrings (`q`) and date bounds
+  (`since`/`until` as YYYY-MM-DD); invalid dates are ignored, never errors.
+- List pages paginate with prev/next links preserving active filters.
+
 ## Authentication
 
 API clients send `Authorization: Bearer <token>`. Browsers navigating links

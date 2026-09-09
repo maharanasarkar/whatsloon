@@ -48,6 +48,15 @@ def _matches_message(message: Message, query: MessageFilter) -> bool:
         return False
     if query.sender and message.sender != query.sender:
         return False
+    if (
+        query.content_contains
+        and query.content_contains.lower() not in (message.content_text or "").lower()
+    ):
+        return False
+    if query.since and message.created_at < query.since:
+        return False
+    if query.until and message.created_at >= query.until:
+        return False
     return True
 
 
@@ -250,6 +259,10 @@ class InMemoryEventRepository(EventRepository):
             items = [e for e in items if e.event_type == query.event_type]
         if query.processing_status:
             items = [e for e in items if e.processing_status.value == query.processing_status]
+        if query.since:
+            items = [e for e in items if e.received_at >= query.since]
+        if query.until:
+            items = [e for e in items if e.received_at < query.until]
         items.sort(key=lambda e: e.received_at, reverse=True)
         return items[query.offset : query.offset + query.limit]
 

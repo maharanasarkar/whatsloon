@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Conversation {{ thread.id }} — whatsloon admin{% endblock %}
+{% block content %}
+<p><a href="{{ root }}/ui/conversations?tenant_id={{ tenant_id }}&amp;token={{ token }}">&larr; All conversations</a></p>
+<h1>Conversation with {{ thread.participant }}</h1>
+<dl class="detail">
+  <dt>Channel</dt><dd>{{ thread.channel }}</dd>
+  <dt>Status</dt><dd>{{ thread.status }}</dd>
+  <dt>Last activity</dt><dd>{{ thread.last_activity_at }}</dd>
+</dl>
+<h2>Thread ({{ thread.messages | length }})</h2>
+{% if thread.messages %}
+<ol class="thread">
+  {% for m in thread.messages %}
+  <li class="bubble {{ m.direction }}">
+    <div class="bubble-meta">
+      <span class="badge">{{ m.direction }}</span>
+      <span>{{ m.created_at }}</span>
+      <span class="badge{% if m.status in ['failed', 'undelivered'] %} fail{% elif m.status in ['delivered', 'read', 'sent'] %} ok{% endif %}">{{ m.status }}</span>
+    </div>
+    <div class="bubble-body">{{ m.content_text or ("[" + m.message_type + "]") }}</div>
+    <div class="bubble-link"><a href="{{ root }}/ui/messages/{{ m.id }}?tenant_id={{ tenant_id }}&amp;token={{ token }}">Details</a></div>
+  </li>
+  {% endfor %}
+</ol>
+{% else %}
+<div class="empty" role="status">No messages in this conversation yet.</div>
+{% endif %}
+{% endblock %}

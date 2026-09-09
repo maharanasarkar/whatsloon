@@ -238,6 +238,12 @@ class SQLMessageRepository:
                 stmt = stmt.where(MessageRow.message_type == query.message_type)
             if query.status:
                 stmt = stmt.where(MessageRow.status == query.status)
+            if query.content_contains:
+                stmt = stmt.where(MessageRow.content_text.ilike(f"%{query.content_contains}%"))
+            if query.since:
+                stmt = stmt.where(MessageRow.created_at >= query.since)
+            if query.until:
+                stmt = stmt.where(MessageRow.created_at < query.until)
             return [_to_message(row) for row in session.execute(stmt).scalars()]
 
     def save_status(self, status: MessageStatus) -> MessageStatus:

@@ -7,6 +7,7 @@ idempotency keys and event hashes as safe no-ops.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional, Protocol
 
 from whatsloon.persistence.models import (
@@ -29,6 +30,9 @@ class MessageFilter:
         message_type: Restrict to a Meta type.
         status: Restrict to a delivery status.
         sender: Restrict to a sender identifier.
+        content_contains: Case-insensitive substring of text content.
+        since: Only records created at or after this time.
+        until: Only records created before this time.
         limit: Maximum rows returned.
         offset: Rows to skip for pagination.
     """
@@ -39,6 +43,9 @@ class MessageFilter:
     message_type: Optional[str] = None
     status: Optional[str] = None
     sender: Optional[str] = None
+    content_contains: Optional[str] = None
+    since: Optional[datetime] = None
+    until: Optional[datetime] = None
     limit: int = 50
     offset: int = 0
 
@@ -51,6 +58,8 @@ class EventFilter:
         tenant_id: Owning tenant (required for isolation).
         event_type: Restrict to one normalized type.
         processing_status: Restrict to a processing state.
+        since: Only records received at or after this time.
+        until: Only records received before this time.
         limit: Maximum rows returned.
         offset: Rows to skip for pagination.
     """
@@ -58,6 +67,8 @@ class EventFilter:
     tenant_id: str
     event_type: Optional[str] = None
     processing_status: Optional[str] = None
+    since: Optional[datetime] = None
+    until: Optional[datetime] = None
     limit: int = 50
     offset: int = 0
 

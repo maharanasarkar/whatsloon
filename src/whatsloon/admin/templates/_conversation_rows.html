@@ -1,6 +1,6 @@
 {% for c in items %}
 <tr>
-  <td><code>{{ c.id }}</code></td>
+  <td><a href="{{ root }}/ui/conversations/{{ c.id }}?tenant_id={{ tenant_id }}&amp;token={{ token }}"><code>{{ c.id }}</code></a></td>
   <td>{{ c.participant }}</td>
   <td>{{ c.last_activity_at }}</td>
 </tr>
