@@ -1,0 +1,12 @@
+{% for m in items %}
+<tr>
+  <td><a href="{{ root }}/ui/messages/{{ m.id }}?tenant_id={{ tenant_id }}&amp;token={{ token }}"><code>{{ m.id }}</code></a></td>
+  <td><span class="badge">{{ m.direction }}</span></td>
+  <td>{{ m.message_type }}</td>
+  <td>{{ m.content_text or "—" }}</td>
+  <td>
+    <span class="badge{% if m.status in ['failed', 'undelivered'] %} fail{% elif m.status in ['delivered', 'read', 'sent'] %} ok{% endif %}">{{ m.status }}</span>
+  </td>
+  <td>{{ m.created_at }}</td>
+</tr>
+{% endfor %}

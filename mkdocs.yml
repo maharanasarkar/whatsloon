@@ -20,6 +20,7 @@ nav:
   - Reliability: reliability.md
   - Modern: modern.md
   - Ecosystem: ecosystem.md
+  - Admin console: admin.md
   - Architecture: architecture.md
   - Version support: version-support.md
   - API: api.md

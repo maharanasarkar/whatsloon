@@ -1,0 +1,11 @@
+{% for e in items %}
+<tr>
+  <td><code>{{ e.id }}</code></td>
+  <td>{{ e.event_type }}</td>
+  <td>
+    <span class="badge{% if e.processing_status == 'failed' %} fail{% elif e.processing_status == 'processed' %} ok{% elif e.processing_status == 'retrying' %} warn{% endif %}">{{ e.processing_status }}</span>
+  </td>
+  <td>{{ e.retry_count }}</td>
+  <td>{{ e.received_at }}</td>
+</tr>
+{% endfor %}

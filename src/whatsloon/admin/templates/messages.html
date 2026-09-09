@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Messages — whatsloon admin{% endblock %}
+{% block content %}
+<h1>Messages</h1>
+<form class="filters" method="get" action="{{ root }}/ui/messages"
+      hx-get="{{ root }}/ui/partials/messages?tenant_id={{ tenant_id }}&amp;token={{ token }}"
+      hx-target="#message-rows" hx-swap="innerHTML" hx-trigger="submit">
+  <input type="hidden" name="tenant_id" value="{{ tenant_id }}">
+  <input type="hidden" name="token" value="{{ token }}">
+  <label>Status
+    <select name="status">
+      <option value="">Any</option>
+      {% for s in ["pending", "sent", "delivered", "read", "failed"] %}
+      <option value="{{ s }}"{% if status == s %} selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Direction
+    <select name="direction">
+      <option value="">Any</option>
+      {% for d in ["inbound", "outbound"] %}
+      <option value="{{ d }}"{% if direction == d %} selected{% endif %}>{{ d }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Apply</button>
+</form>
+{% if items %}
+<table>
+  <thead><tr><th scope="col">ID</th><th scope="col">Direction</th><th scope="col">Type</th><th scope="col">Content</th><th scope="col">Status</th><th scope="col">Created</th></tr></thead>
+  <tbody id="message-rows">
+    {% include "_message_rows.html" %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty" role="status">No messages match these filters.</div>
+{% endif %}
+{% endblock %}

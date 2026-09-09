@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — whatsloon admin{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<p>Tenant <code>{{ tenant_id }}</code> · signed in as <code>{{ user }}</code></p>
+<section class="cards" aria-label="Totals">
+  <div class="card"><div class="value">{{ stats.inbound }}</div><div class="label">Inbound</div></div>
+  <div class="card"><div class="value">{{ stats.outbound }}</div><div class="label">Outbound</div></div>
+  <div class="card{% if stats.failed %} danger{% endif %}"><div class="value">{{ stats.failed }}</div><div class="label">Failed</div></div>
+  <div class="card"><div class="value">{{ stats.pending_events }}</div><div class="label">Pending events</div></div>
+</section>
+<h2>Recent conversations</h2>
+{% if stats.recent_conversations %}
+<table>
+  <thead><tr><th scope="col">ID</th><th scope="col">Participant</th></tr></thead>
+  <tbody>
+    {% for c in stats.recent_conversations %}
+    <tr><td><code>{{ c.id }}</code></td><td>{{ c.participant }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty" role="status">No conversations yet for this tenant.</div>
+{% endif %}
+{% endblock %}

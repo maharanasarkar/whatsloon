@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Message {{ detail.id }} — whatsloon admin{% endblock %}
+{% block content %}
+<h1>Message <code>{{ detail.id }}</code></h1>
+<dl class="detail">
+  <dt>Direction</dt><dd>{{ detail.direction }}</dd>
+  <dt>Conversation</dt><dd><code>{{ detail.conversation_id }}</code></dd>
+  <dt>From</dt><dd>{{ detail.sender }}</dd>
+  <dt>To</dt><dd>{{ detail.recipient }}</dd>
+  <dt>Type</dt><dd>{{ detail.message_type }}</dd>
+  <dt>Status</dt><dd>{{ detail.status }}</dd>
+  <dt>API version</dt><dd>{{ detail.api_version or "—" }}</dd>
+  <dt>Created</dt><dd>{{ detail.created_at }}</dd>
+  <dt>Trace ID</dt><dd><code>{{ detail.meta_trace_id or "—" }}</code></dd>
+</dl>
+<h2>Content</h2>
+{% if detail.content_text %}
+<p>{{ detail.content_text }}</p>
+{% else %}
+<div class="empty" role="status">No text content{{ " (masked view)" if not reveal else ""}}.</div>
+{% endif %}
+{% if reveal and detail.structured_payload is defined %}
+<h2>Payload (redacted)</h2>
+<pre class="raw">{{ detail.structured_payload | tojson(indent=2) }}</pre>
+{% elif can_view_raw %}
+<p><a class="btn" href="{{ root }}/ui/messages/{{ detail.id }}?tenant_id={{ tenant_id }}&amp;token={{ token }}&amp;reveal_raw=true">Reveal redacted payload</a></p>
+{% endif %}
+<h2>Status history</h2>
+{% if detail.statuses %}
+<table>
+  <thead><tr><th scope="col">Status</th><th scope="col">At</th></tr></thead>
+  <tbody>
+    {% for s in detail.statuses %}
+    <tr><td>{{ s.external_status }}</td><td>{{ s.occurred_at }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty" role="status">No status transitions recorded.</div>
+{% endif %}
+{% endblock %}
