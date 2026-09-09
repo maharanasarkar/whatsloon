@@ -160,12 +160,13 @@ def base_context(
     }
 
 
-def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
+def create_ui_router(store: Any, auth: AdminAuth, processor: Optional[Any] = None) -> APIRouter:
     """Create HTML page and HTMX partial routes.
 
     Args:
         store: Repository bundle for read views.
         auth: Pluggable authentication backend.
+        processor: Optional webhook processor enabling event retries.
 
     Returns:
         Configured router to include on the admin app.
@@ -589,6 +590,7 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
                 "processing_status": processing_status or "",
                 "since": since or "",
                 "until": until or "",
+                "can_retry": processor is not None,
             }
         )
         context.update(_page_window(offset, limit, len(items)))
@@ -647,6 +649,55 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
                     for e in store.events.search(query)
                 ],
                 "processing_status": processing_status or "",
+                "since": since or "",
+                "until": until or "",
+                "can_retry": processor is not None,
+            }
+        )
+        return templates.TemplateResponse(request, "_event_rows.html", context)
+
+    @router.post("/ui/events/{event_id}/retry", response_class=HTMLResponse)
+    def retry_event_row(
+        request: Request,
+        event_id: str,
+        tenant_id: str,
+        token: Optional[str] = Query(default=None),
+        user: AdminUser = Depends(principal),
+    ) -> HTMLResponse:
+        """Retry one event and re-render its row.
+
+        Args:
+            request: Incoming request.
+            event_id: Stored event identifier.
+            tenant_id: Tenant scope.
+            token: Query token.
+            user: Authenticated principal.
+
+        Returns:
+            Updated row fragment.
+        """
+        denied = views.check_access(user, tenant_id)
+        if denied is not None:
+            return HTMLResponse("<tr><td>Forbidden</td></tr>", status_code=denied["status"])
+        if processor is None:
+            return HTMLResponse("<tr><td>Retry unavailable</td></tr>", status_code=501)
+        result = processor.retry_event(tenant_id, event_id)
+        if result.outcome == "missing":
+            return HTMLResponse("<tr><td>Not found</td></tr>", status_code=404)
+        record = store.events.get(tenant_id, event_id)
+        context = base_context(request, user, tenant_id, token, "events")
+        context.update(
+            {
+                "items": [
+                    {
+                        "id": record.id,
+                        "event_type": record.event_type,
+                        "processing_status": record.processing_status.value,
+                        "retry_count": record.retry_count,
+                        "received_at": record.received_at.isoformat(),
+                    }
+                ],
+                "can_retry": True,
             }
         )
         return templates.TemplateResponse(request, "_event_rows.html", context)

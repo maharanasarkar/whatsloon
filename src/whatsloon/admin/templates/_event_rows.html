@@ -1,5 +1,5 @@
 {% for e in items %}
-<tr>
+<tr id="event-{{ e.id }}">
   <td><code>{{ e.id }}</code></td>
   <td>{{ e.event_type }}</td>
   <td>
@@ -7,5 +7,11 @@
   </td>
   <td>{{ e.retry_count }}</td>
   <td>{{ e.received_at }}</td>
+  <td>
+    {% if can_retry and e.processing_status == 'failed' %}
+    <button hx-post="{{ root }}/ui/events/{{ e.id }}/retry?tenant_id={{ tenant_id }}&amp;token={{ token }}"
+            hx-target="#event-{{ e.id }}" hx-swap="outerHTML">Retry</button>
+    {% endif %}
+  </td>
 </tr>
 {% endfor %}

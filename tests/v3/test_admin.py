@@ -139,6 +139,78 @@ def test_no_auth_backend_refused():
         create_app(_store(), None)
 
 
+def _processor_client():
+    """Build a client wired to a processor with retained payloads.
+
+    Returns:
+        Test client.
+    """
+    from whatsloon.webhooks.processor import WebhookProcessor
+    from whatsloon.webhooks.router import EventRouter
+
+    store = _store()
+    router = EventRouter()
+    router.register("message.received", lambda event: None)
+    processor = WebhookProcessor(
+        router=router, events=store.events, tenant_resolver=lambda e: "t-1", retain_raw=True
+    )
+    mapping = {"owner-token": AdminUser(username="owner", tenant_id="*", roles=["owner"])}
+    return TestClient(create_app(store, StaticTokenAuth(mapping), processor=processor))
+
+
+def test_retry_endpoint_redispatches_failed():
+    """Failed events retry from retained payloads with outcomes."""
+    from whatsloon.persistence.models import ProcessingStatus, WebhookEvent
+    from whatsloon.webhooks.events import WebhookMessageReceived
+    from whatsloon.webhooks.processor import WebhookProcessor
+    from whatsloon.webhooks.router import EventRouter
+
+    store = _store()
+    router = EventRouter()
+    handled = []
+    router.register("message.received", handled.append)
+    processor = WebhookProcessor(
+        router=router, events=store.events, tenant_resolver=lambda e: "t-1", retain_raw=True
+    )
+    record = WebhookEvent(
+        id="e-r1",
+        event_hash="h-r1",
+        tenant_id="t-1",
+        event_type="message.received",
+        processing_status=ProcessingStatus.FAILED,
+        has_raw_payload=True,
+    )
+    raw = WebhookMessageReceived(message_id="w-r1", sender="919").model_dump()
+    store.events.record(record, raw)
+    mapping = {"owner-token": AdminUser(username="owner", tenant_id="*", roles=["owner"])}
+    client = TestClient(create_app(store, StaticTokenAuth(mapping), processor=processor))
+    response = client.post(
+        "/events/e-r1/retry", params={"tenant_id": "t-1"}, headers=_auth("owner-token")
+    )
+    assert response.status_code == 200
+    assert response.json()["outcome"] == "handled"
+    assert [e.message_id for e in handled] == ["w-r1"]
+    assert store.events.get("t-1", "e-r1").processing_status == ProcessingStatus.PROCESSED
+
+
+def test_retry_endpoint_statuses():
+    """Retry reports missing, unavailable, and unwired distinctly."""
+    from whatsloon.persistence.models import ProcessingStatus, WebhookEvent
+
+    client = _processor_client()
+    headers = _auth("owner-token")
+    missing = client.post("/events/nope/retry", params={"tenant_id": "t-1"}, headers=headers)
+    assert missing.status_code == 404
+    assert (
+        _client()
+        .post("/events/nope/retry", params={"tenant_id": "t-1"}, headers=headers)
+        .status_code
+        == 501
+    )
+    denied = client.post("/events/nope/retry", params={"tenant_id": "t-1"})
+    assert denied.status_code == 401
+
+
 def test_redact_payload_nested():
     """Secret keys are redacted at any depth."""
     assert redact_payload({"a": {"access_token": "x"}, "b": [1]}) == {

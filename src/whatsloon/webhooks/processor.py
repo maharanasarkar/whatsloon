@@ -17,7 +17,13 @@ from typing import Any, Optional
 
 from whatsloon.persistence.models import ProcessingStatus, WebhookEvent, utcnow
 from whatsloon.persistence.policies import fingerprint
-from whatsloon.webhooks.events import NormalizedEvent
+from whatsloon.webhooks.events import (
+    NormalizedEvent,
+    UnknownEvent,
+    WebhookCallEvent,
+    WebhookMessageReceived,
+    WebhookMessageStatus,
+)
 from whatsloon.webhooks.parser import parse_body
 from whatsloon.webhooks.router import EventRouter
 from whatsloon.webhooks.verifier import verify_signature
@@ -70,7 +76,8 @@ class ProcessResult:
     Attributes:
         event_id: Stored event identifier.
         event_type: Normalized type.
-        outcome: One of handled, duplicate, filtered, failed, queued.
+        outcome: One of handled, duplicate, filtered, failed, queued,
+            unavailable (no retained payload), or missing (unknown ID).
         detail: Redacted detail such as an error summary.
     """
 
@@ -78,6 +85,33 @@ class ProcessResult:
     event_type: str
     outcome: str
     detail: str = ""
+
+
+_EVENT_MODELS: dict[str, Any] = {
+    "message.received": WebhookMessageReceived,
+    "message.status": WebhookMessageStatus,
+    "call.event": WebhookCallEvent,
+    "unknown": UnknownEvent,
+}
+"""Normalized event models keyed by type."""
+
+
+def rebuild_event(event_type: str, raw: dict[str, Any]) -> NormalizedEvent:
+    """Rebuild a normalized event from a retained raw payload.
+
+    Args:
+        event_type: Recorded normalized type.
+        raw: Retained raw payload.
+
+    Returns:
+        Validated event, or UnknownEvent when validation fails.
+    """
+    model = _EVENT_MODELS.get(event_type, UnknownEvent)
+    try:
+        rebuilt: NormalizedEvent = model.model_validate(raw)
+        return rebuilt
+    except Exception:
+        return UnknownEvent(reason="unreconstructable", raw=raw if isinstance(raw, dict) else {})
 
 
 @dataclass
@@ -186,22 +220,16 @@ class WebhookProcessor:
             record.error_summary = error[:500]
         self.events.mark(record)
 
-    def _handle_one(self, event: NormalizedEvent) -> ProcessResult:
-        """Handle one normalized event synchronously.
+    def _dispatch_sync(self, record: Any, event: NormalizedEvent) -> ProcessResult:
+        """Resolve and invoke the handler for a stored record.
 
         Args:
+            record: Stored event record.
             event: Normalized event.
 
         Returns:
             Outcome record.
         """
-        record, duplicate = self._store_receipt(event)
-        if duplicate and record.processing_status == ProcessingStatus.PROCESSED:
-            return ProcessResult(record.id, event.event_type, "duplicate")
-        if self.queue is not None:
-            self.queue(record.id)
-            self._finish(record, status=ProcessingStatus.RETRYING)
-            return ProcessResult(record.id, event.event_type, "queued")
         try:
             handler = self.router.resolve(event)
         except Exception as exc:
@@ -219,6 +247,24 @@ class WebhookProcessor:
         except Exception as exc:
             self._finish(record, status=ProcessingStatus.FAILED, error=str(exc))
             return ProcessResult(record.id, event.event_type, "failed", str(exc)[:200])
+
+    def _handle_one(self, event: NormalizedEvent) -> ProcessResult:
+        """Handle one normalized event synchronously.
+
+        Args:
+            event: Normalized event.
+
+        Returns:
+            Outcome record.
+        """
+        record, duplicate = self._store_receipt(event)
+        if duplicate and record.processing_status == ProcessingStatus.PROCESSED:
+            return ProcessResult(record.id, event.event_type, "duplicate")
+        if self.queue is not None:
+            self.queue(record.id)
+            self._finish(record, status=ProcessingStatus.RETRYING)
+            return ProcessResult(record.id, event.event_type, "queued")
+        return self._dispatch_sync(record, event)
 
     async def _ahandle_one(self, event: NormalizedEvent) -> ProcessResult:
         """Handle one normalized event with async support.
@@ -254,6 +300,68 @@ class WebhookProcessor:
             self._finish(record, status=ProcessingStatus.FAILED, error=str(exc))
             return ProcessResult(record.id, event.event_type, "failed", str(exc)[:200])
 
+    def retry_event(self, tenant_id: str, event_id: str) -> ProcessResult:
+        """Re-dispatch a stored event from its retained raw payload.
+
+        Args:
+            tenant_id: Owning tenant.
+            event_id: Stored event identifier.
+
+        Returns:
+            Outcome record: handled/failed/filtered, unavailable when no
+            raw payload was retained, or missing for unknown IDs.
+        """
+        record = self.events.get(tenant_id, event_id)
+        if record is None:
+            return ProcessResult(event_id, "", "missing", "Unknown event ID.")
+        raw = self.events.raw_payload(tenant_id, event_id)
+        if raw is None:
+            return ProcessResult(
+                event_id, record.event_type, "unavailable", "No retained raw payload."
+            )
+        record.retry_count += 1
+        self.events.mark(record)
+        return self._dispatch_sync(record, rebuild_event(record.event_type, raw))
+
+    async def aretry_event(self, tenant_id: str, event_id: str) -> ProcessResult:
+        """Async variant of :meth:`retry_event` awaiting coroutine handlers.
+
+        Args:
+            tenant_id: Owning tenant.
+            event_id: Stored event identifier.
+
+        Returns:
+            Outcome record.
+        """
+        record = self.events.get(tenant_id, event_id)
+        if record is None:
+            return ProcessResult(event_id, "", "missing", "Unknown event ID.")
+        raw = self.events.raw_payload(tenant_id, event_id)
+        if raw is None:
+            return ProcessResult(
+                event_id, record.event_type, "unavailable", "No retained raw payload."
+            )
+        record.retry_count += 1
+        self.events.mark(record)
+        event = rebuild_event(record.event_type, raw)
+        try:
+            handler = self.router.resolve(event)
+        except Exception as exc:
+            self._finish(record, status=ProcessingStatus.FAILED, error=str(exc))
+            return ProcessResult(record.id, event.event_type, "failed", str(exc)[:200])
+        if handler is None:
+            self._finish(record, status=ProcessingStatus.PROCESSED)
+            return ProcessResult(record.id, event.event_type, "filtered")
+        try:
+            outcome = handler(event)
+            if inspect.isawaitable(outcome):
+                await outcome
+            self._finish(record, status=ProcessingStatus.PROCESSED)
+            return ProcessResult(record.id, event.event_type, "handled")
+        except Exception as exc:
+            self._finish(record, status=ProcessingStatus.FAILED, error=str(exc))
+            return ProcessResult(record.id, event.event_type, "failed", str(exc)[:200])
+
 
 __all__ = [
     "EnqueueHook",
@@ -261,4 +369,5 @@ __all__ = [
     "TenantResolver",
     "WebhookProcessor",
     "default_tenant_resolver",
+    "rebuild_event",
 ]

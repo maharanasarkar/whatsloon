@@ -51,6 +51,18 @@ a skip link, keyboard-native controls, and explicit empty and error states.
   (`since`/`until` as YYYY-MM-DD); invalid dates are ignored, never errors.
 - List pages paginate with prev/next links preserving active filters.
 
+## Failure center
+
+Failed events show a **Retry** button (and `POST /events/{id}/retry` on the
+JSON API) that re-dispatches the stored event from its retained raw payload
+and bumps the retry count. Retries require:
+
+- a processor wired into `create_app(store, auth, processor=...)`, and
+- retained raw payloads (`retain_raw=True`); otherwise the outcome reports
+  `unavailable`, and unknown IDs report `missing`.
+
+Without a processor the controls are hidden and the endpoint answers 501.
+
 ## Authentication
 
 API clients send `Authorization: Bearer <token>`. Browsers navigating links

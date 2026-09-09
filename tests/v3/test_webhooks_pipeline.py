@@ -133,3 +133,59 @@ async def test_async_handlers_awaited():
     results = await processor.aprocess(_body(), _signed(_body()), app_secret=SECRET)
     assert results[0].outcome == "handled"
     assert seen == ["wamid.fixture-msg-1"]
+
+
+def test_retry_failed_event_after_fix():
+    """Failed events re-dispatch from retained payloads with retry counts."""
+    attempts = []
+
+    def flaky(event):
+        attempts.append(event.message_id)
+        if len(attempts) == 1:
+            raise RuntimeError("transient")
+
+    router = EventRouter()
+    events = InMemoryEventRepository()
+    router.register("message.received", flaky)
+    processor = WebhookProcessor(
+        router=router, events=events, tenant_resolver=lambda e: "t-1", retain_raw=True
+    )
+    body = _body()
+    first = processor.process(body, _signed(body), app_secret=SECRET)[0]
+    assert first.outcome == "failed"
+    retried = processor.retry_event("t-1", first.event_id)
+    assert retried.outcome == "handled"
+    assert attempts == ["wamid.fixture-msg-1", "wamid.fixture-msg-1"]
+    record = events.get("t-1", first.event_id)
+    assert record.retry_count == 1
+    assert record.processing_status == ProcessingStatus.PROCESSED
+
+
+def test_retry_missing_and_unavailable():
+    """Unknown IDs and missing payloads report distinctly, never raising."""
+    processor, _, _, _ = _processor()
+    assert processor.retry_event("t-1", "nope").outcome == "missing"
+    body = _body()
+    stored = processor.process(body, _signed(body), app_secret=SECRET)[0]
+    assert stored.outcome == "handled"
+    assert processor.retry_event("t-1", stored.event_id).outcome == "unavailable"
+
+
+async def test_async_retry():
+    """Coroutine handlers rerun on the async retry path."""
+    seen = []
+
+    async def handler(event):
+        seen.append(event.message_id)
+
+    router = EventRouter()
+    events = InMemoryEventRepository()
+    router.register("message.received", handler)
+    processor = WebhookProcessor(
+        router=router, events=events, tenant_resolver=lambda e: "t-1", retain_raw=True
+    )
+    body = _body()
+    stored = (await processor.aprocess(body, _signed(body), app_secret=SECRET))[0]
+    result = await processor.aretry_event("t-1", stored.event_id)
+    assert result.outcome == "handled"
+    assert seen == ["wamid.fixture-msg-1", "wamid.fixture-msg-1"]

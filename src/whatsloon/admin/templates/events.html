@@ -2,6 +2,7 @@
 {% block title %}Events — whatsloon admin{% endblock %}
 {% block content %}
 <h1>Webhook events</h1>
+<p><a href="{{ root }}/ui/events?tenant_id={{ tenant_id }}&amp;token={{ token }}&amp;processing_status=failed">Show failed only</a></p>
 <form class="filters" method="get" action="{{ root }}/ui/events"
       hx-get="{{ root }}/ui/partials/events?tenant_id={{ tenant_id }}&amp;token={{ token }}"
       hx-target="#event-rows" hx-swap="innerHTML" hx-trigger="submit">
@@ -25,7 +26,7 @@
 </form>
 {% if items %}
 <table>
-  <thead><tr><th scope="col">ID</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Retries</th><th scope="col">Received</th></tr></thead>
+  <thead><tr><th scope="col">ID</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Retries</th><th scope="col">Received</th><th scope="col">Action</th></tr></thead>
   <tbody id="event-rows">
     {% include "_event_rows.html" %}
   </tbody>

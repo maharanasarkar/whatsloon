@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Admin console HTML UI: server-rendered dashboard, conversations, messages, events pages (Jinja2 + HTMX, no JS build), HTMX row partials, bundled stylesheet, `docs/admin.md`.
 - Admin thread view, content/date search, and pagination across list pages.
+- Admin failure center: dead-letter retry from retained payloads via UI and `POST /events/{id}/retry`, with `missing`/`unavailable` outcomes and retry counts.
 
 ### Fixed
 

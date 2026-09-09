@@ -278,6 +278,21 @@ class InMemoryEventRepository(EventRepository):
         self._items[event.id] = event
         return event
 
+    def get(self, tenant_id: str, event_id: str) -> Optional[WebhookEvent]:
+        """Fetch an event by ID within a tenant.
+
+        Args:
+            tenant_id: Owning tenant.
+            event_id: Local identifier.
+
+        Returns:
+            Record or None.
+        """
+        event = self._items.get(event_id)
+        if event is None or event.tenant_id != tenant_id:
+            return None
+        return event
+
     def raw_payload(self, tenant_id: str, event_id: str) -> Optional[dict]:
         """Fetch a retained raw payload within a tenant.
 

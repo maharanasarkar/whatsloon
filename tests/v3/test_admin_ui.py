@@ -215,3 +215,50 @@ def test_content_search_and_dates():
     )
     fragment = client.get("/ui/partials/messages" + _q("viewer-token") + "&q=reply").text
     assert "Reply here" in fragment and "<html" not in fragment
+
+
+def _retry_client():
+    """Build a UI client wired to a processor with a failed event.
+
+    Returns:
+        Test client with a retained failed event.
+    """
+    from whatsloon.webhooks.events import WebhookMessageReceived
+    from whatsloon.webhooks.processor import WebhookProcessor
+    from whatsloon.webhooks.router import EventRouter
+
+    store = _store()
+    router = EventRouter()
+    router.register("message.received", lambda event: None)
+    processor = WebhookProcessor(
+        router=router, events=store.events, tenant_resolver=lambda e: "t-1", retain_raw=True
+    )
+    record = WebhookEvent(
+        id="e-ui-retry",
+        event_hash="h-ui-retry",
+        tenant_id="t-1",
+        event_type="message.received",
+        processing_status=ProcessingStatus.FAILED,
+        has_raw_payload=True,
+    )
+    store.events.record(record, WebhookMessageReceived(message_id="w-ui").model_dump())
+    mapping = {"owner-token": AdminUser(username="owner", tenant_id="*", roles=["owner"])}
+    return TestClient(create_app(store, StaticTokenAuth(mapping), processor=processor))
+
+
+def test_retry_button_and_row_update():
+    """Failed rows offer retry; posting updates the row in place."""
+    client = _retry_client()
+    page = client.get("/ui/events" + _q("owner-token")).text
+    assert "Retry" in page
+    assert "Show failed only" in page
+    row = client.post("/ui/events/e-ui-retry/retry?tenant_id=t-1&token=owner-token")
+    assert row.status_code == 200
+    assert "processed" in row.text
+    assert 'id="event-e-ui-retry"' in row.text
+    assert client.post("/ui/events/nope/retry?tenant_id=t-1&token=owner-token").status_code == 404
+
+
+def test_retry_hidden_without_processor():
+    """Unwired consoles show no retry controls."""
+    assert "Retry" not in _client().get("/ui/events" + _q("owner-token")).text
