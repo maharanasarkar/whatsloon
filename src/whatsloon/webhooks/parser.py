@@ -150,6 +150,8 @@ def _parse_message(
         text_body = text["body"]
     sender = str(message.get("from", ""))
     identity = identities.get(sender, {})
+    # Live traffic carries the BSUID on the message itself; contacts are fallback.
+    user_id = str(message.get("from_user_id", "")) or identity.get("user_id", "")
     return WebhookMessageReceived(
         api_version=api_version,
         message_id=str(message.get("id", "")),
@@ -159,7 +161,7 @@ def _parse_message(
         message_type=kind,
         text_body=text_body,
         group_id=str(message.get("group_id", "")),
-        user_id=identity.get("user_id", ""),
+        user_id=user_id,
         parent_user_id=identity.get("parent_user_id", ""),
         raw=message,
     )
