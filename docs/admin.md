@@ -90,8 +90,12 @@ wiring:
 from whatsloon.messages.service import MessageService
 
 service = MessageService(
-    adapter, transport, phone_number_id,
-    message_store=messages, conversation_store=conversations, tenant_id="t-1",
+    adapter,
+    transport,
+    phone_number_id,
+    message_store=messages,
+    conversation_store=conversations,
+    tenant_id="t-1",
 )
 ```
 
