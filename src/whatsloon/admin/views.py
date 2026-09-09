@@ -126,4 +126,44 @@ def message_detail(
     return body, 200
 
 
-__all__ = ["check_access", "dashboard", "message_detail", "serialize_message"]
+def conversation_detail(
+    store: Any, user: AdminUser, tenant_id: str, conversation_id: str
+) -> tuple[Optional[dict[str, Any]], int]:
+    """Fetch a conversation with its thread in chronological order.
+
+    Args:
+        store: Repository bundle.
+        user: Authenticated principal.
+        tenant_id: Tenant scope.
+        conversation_id: Local identifier.
+
+    Returns:
+        Tuple of response mapping and HTTP status.
+    """
+    denied = check_access(user, tenant_id)
+    if denied is not None:
+        return denied, denied["status"]
+    conversation = store.conversations.get(tenant_id, conversation_id)
+    if conversation is None:
+        return {"error": "not_found", "status": 404}, 404
+    thread = store.messages.search(
+        MessageFilter(tenant_id=tenant_id, conversation_id=conversation_id, limit=500)
+    )
+    thread = list(reversed(thread))
+    return {
+        "id": conversation.id,
+        "participant": mask_phone(conversation.participant),
+        "channel": conversation.channel,
+        "status": conversation.status,
+        "last_activity_at": conversation.last_activity_at.isoformat(),
+        "messages": [serialize_message(m) for m in thread],
+    }, 200
+
+
+__all__ = [
+    "check_access",
+    "conversation_detail",
+    "dashboard",
+    "message_detail",
+    "serialize_message",
+]

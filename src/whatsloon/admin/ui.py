@@ -96,6 +96,46 @@ def error_page(
     )
 
 
+def _parse_date(value: Optional[str]) -> Optional[Any]:
+    """Parse a YYYY-MM-DD query date, ignoring invalid input.
+
+    Args:
+        value: Candidate date string.
+
+    Returns:
+        Midnight UTC datetime or None.
+    """
+    from datetime import datetime, timezone
+
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value.strip(), "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def _page_window(offset: int, limit: int, count: int) -> dict[str, Any]:
+    """Build prev/next pagination context.
+
+    Args:
+        offset: Current offset.
+        limit: Page size.
+        count: Rows on this page.
+
+    Returns:
+        Pagination mapping.
+    """
+    return {
+        "offset": offset,
+        "limit": limit,
+        "has_prev": offset > 0,
+        "has_more": count >= limit,
+        "prev_offset": max(0, offset - limit),
+        "next_offset": offset + limit,
+    }
+
+
 def base_context(
     request: Request, user: AdminUser, tenant_id: str, token: Optional[str], active: str
 ) -> dict[str, Any]:
@@ -208,6 +248,7 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
         request: Request,
         tenant_id: str,
         limit: int = 50,
+        offset: int = 0,
         token: Optional[str] = Query(default=None),
         user: AdminUser = Depends(principal),
     ) -> HTMLResponse:
@@ -240,17 +281,54 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
                 "participant": views.mask_phone(c.participant),
                 "last_activity_at": c.last_activity_at.isoformat(),
             }
-            for c in store.conversations.list(tenant_id, limit=limit)
+            for c in store.conversations.list(tenant_id, limit=limit, offset=offset)
         ]
         context = base_context(request, user, tenant_id, token, "conversations")
         context.update({"items": items, "limit": limit})
+        context.update(_page_window(offset, limit, len(items)))
         return templates.TemplateResponse(request, "conversations.html", context)
+
+    @router.get("/ui/conversations/{conversation_id}", response_class=HTMLResponse)
+    def conversation_thread_page(
+        request: Request,
+        conversation_id: str,
+        tenant_id: str,
+        token: Optional[str] = Query(default=None),
+        user: AdminUser = Depends(principal),
+    ) -> HTMLResponse:
+        """Render one conversation thread in chronological order.
+
+        Args:
+            request: Incoming request.
+            conversation_id: Local identifier.
+            tenant_id: Tenant scope.
+            token: Query token.
+            user: Authenticated principal.
+
+        Returns:
+            Thread HTML or an error page.
+        """
+        body, status = views.conversation_detail(store, user, tenant_id, conversation_id)
+        if status != 200 or body is None:
+            return error_page(
+                templates,
+                request,
+                status=status,
+                heading="Not found" if status == 404 else "Forbidden",
+                message="The conversation does not exist or cannot be viewed.",
+                tenant_id=tenant_id,
+                token=token or "",
+            )
+        context = base_context(request, user, tenant_id, token, "conversations")
+        context.update({"thread": body})
+        return templates.TemplateResponse(request, "conversation.html", context)
 
     @router.get("/ui/partials/conversations", response_class=HTMLResponse)
     def conversations_partial(
         request: Request,
         tenant_id: str,
         limit: int = 50,
+        offset: int = 0,
         token: Optional[str] = Query(default=None),
         user: AdminUser = Depends(principal),
     ) -> HTMLResponse:
@@ -275,7 +353,7 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
                 "participant": views.mask_phone(c.participant),
                 "last_activity_at": c.last_activity_at.isoformat(),
             }
-            for c in store.conversations.list(tenant_id, limit=limit)
+            for c in store.conversations.list(tenant_id, limit=limit, offset=offset)
         ]
         context = base_context(request, user, tenant_id, token, "conversations")
         context.update({"items": items, "limit": limit})
@@ -287,6 +365,11 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
         tenant_id: str,
         status: Optional[str] = Query(default=None),
         direction: Optional[str] = Query(default=None),
+        q: Optional[str] = Query(default=None),
+        since: Optional[str] = Query(default=None),
+        until: Optional[str] = Query(default=None),
+        limit: int = 50,
+        offset: int = 0,
         token: Optional[str] = Query(default=None),
         user: AdminUser = Depends(principal),
     ) -> HTMLResponse:
@@ -297,6 +380,11 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
             tenant_id: Tenant scope.
             status: Optional delivery status filter.
             direction: Optional direction filter.
+            q: Optional content substring search.
+            since: Optional start date (YYYY-MM-DD).
+            until: Optional end date (YYYY-MM-DD).
+            limit: Page size.
+            offset: Page offset.
             token: Query token.
             user: Authenticated principal.
 
@@ -314,15 +402,29 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
                 tenant_id=tenant_id,
                 token=token or "",
             )
-        query = MessageFilter(tenant_id=tenant_id, status=status, direction=direction)
+        query = MessageFilter(
+            tenant_id=tenant_id,
+            status=status,
+            direction=direction,
+            content_contains=q or None,
+            since=_parse_date(since),
+            until=_parse_date(until),
+            limit=limit,
+            offset=offset,
+        )
+        items = [views.serialize_message(m) for m in store.messages.search(query)]
         context = base_context(request, user, tenant_id, token, "messages")
         context.update(
             {
-                "items": [views.serialize_message(m) for m in store.messages.search(query)],
+                "items": items,
                 "status": status or "",
                 "direction": direction or "",
+                "q": q or "",
+                "since": since or "",
+                "until": until or "",
             }
         )
+        context.update(_page_window(offset, limit, len(items)))
         return templates.TemplateResponse(request, "messages.html", context)
 
     @router.get("/ui/partials/messages", response_class=HTMLResponse)
@@ -331,6 +433,11 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
         tenant_id: str,
         status: Optional[str] = Query(default=None),
         direction: Optional[str] = Query(default=None),
+        q: Optional[str] = Query(default=None),
+        since: Optional[str] = Query(default=None),
+        until: Optional[str] = Query(default=None),
+        limit: int = 50,
+        offset: int = 0,
         token: Optional[str] = Query(default=None),
         user: AdminUser = Depends(principal),
     ) -> HTMLResponse:
@@ -350,13 +457,25 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
         denied = views.check_access(user, tenant_id)
         if denied is not None:
             return HTMLResponse("<tr><td>Forbidden</td></tr>", status_code=denied["status"])
-        query = MessageFilter(tenant_id=tenant_id, status=status, direction=direction)
+        query = MessageFilter(
+            tenant_id=tenant_id,
+            status=status,
+            direction=direction,
+            content_contains=q or None,
+            since=_parse_date(since),
+            until=_parse_date(until),
+            limit=limit,
+            offset=offset,
+        )
         context = base_context(request, user, tenant_id, token, "messages")
         context.update(
             {
                 "items": [views.serialize_message(m) for m in store.messages.search(query)],
                 "status": status or "",
                 "direction": direction or "",
+                "q": q or "",
+                "since": since or "",
+                "until": until or "",
             }
         )
         return templates.TemplateResponse(request, "_message_rows.html", context)
@@ -411,6 +530,10 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
         request: Request,
         tenant_id: str,
         processing_status: Optional[str] = Query(default=None),
+        since: Optional[str] = Query(default=None),
+        until: Optional[str] = Query(default=None),
+        limit: int = 50,
+        offset: int = 0,
         token: Optional[str] = Query(default=None),
         user: AdminUser = Depends(principal),
     ) -> HTMLResponse:
@@ -420,6 +543,10 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
             request: Incoming request.
             tenant_id: Tenant scope.
             processing_status: Optional processing state filter.
+            since: Optional start date (YYYY-MM-DD).
+            until: Optional end date (YYYY-MM-DD).
+            limit: Page size.
+            offset: Page offset.
             token: Query token.
             user: Authenticated principal.
 
@@ -437,23 +564,34 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
                 tenant_id=tenant_id,
                 token=token or "",
             )
-        query = EventFilter(tenant_id=tenant_id, processing_status=processing_status)
+        query = EventFilter(
+            tenant_id=tenant_id,
+            processing_status=processing_status,
+            since=_parse_date(since),
+            until=_parse_date(until),
+            limit=limit,
+            offset=offset,
+        )
+        items = [
+            {
+                "id": e.id,
+                "event_type": e.event_type,
+                "processing_status": e.processing_status.value,
+                "retry_count": e.retry_count,
+                "received_at": e.received_at.isoformat(),
+            }
+            for e in store.events.search(query)
+        ]
         context = base_context(request, user, tenant_id, token, "events")
         context.update(
             {
-                "items": [
-                    {
-                        "id": e.id,
-                        "event_type": e.event_type,
-                        "processing_status": e.processing_status.value,
-                        "retry_count": e.retry_count,
-                        "received_at": e.received_at.isoformat(),
-                    }
-                    for e in store.events.search(query)
-                ],
+                "items": items,
                 "processing_status": processing_status or "",
+                "since": since or "",
+                "until": until or "",
             }
         )
+        context.update(_page_window(offset, limit, len(items)))
         return templates.TemplateResponse(request, "events.html", context)
 
     @router.get("/ui/partials/events", response_class=HTMLResponse)
@@ -461,6 +599,10 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
         request: Request,
         tenant_id: str,
         processing_status: Optional[str] = Query(default=None),
+        since: Optional[str] = Query(default=None),
+        until: Optional[str] = Query(default=None),
+        limit: int = 50,
+        offset: int = 0,
         token: Optional[str] = Query(default=None),
         user: AdminUser = Depends(principal),
     ) -> HTMLResponse:
@@ -470,6 +612,10 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
             request: Incoming request.
             tenant_id: Tenant scope.
             processing_status: Optional processing state filter.
+            since: Optional start date (YYYY-MM-DD).
+            until: Optional end date (YYYY-MM-DD).
+            limit: Page size.
+            offset: Page offset.
             token: Query token.
             user: Authenticated principal.
 
@@ -479,7 +625,14 @@ def create_ui_router(store: Any, auth: AdminAuth) -> APIRouter:
         denied = views.check_access(user, tenant_id)
         if denied is not None:
             return HTMLResponse("<tr><td>Forbidden</td></tr>", status_code=denied["status"])
-        query = EventFilter(tenant_id=tenant_id, processing_status=processing_status)
+        query = EventFilter(
+            tenant_id=tenant_id,
+            processing_status=processing_status,
+            since=_parse_date(since),
+            until=_parse_date(until),
+            limit=limit,
+            offset=offset,
+        )
         context = base_context(request, user, tenant_id, token, "events")
         context.update(
             {

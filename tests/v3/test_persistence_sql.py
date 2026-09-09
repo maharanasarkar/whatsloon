@@ -53,3 +53,29 @@ def test_sql_idempotent_save(tmp_path):
     repos.save(_message())
     second = repos.save(_message(id="m-2", content_text="changed"))
     assert second.id == "m-1"
+
+
+def test_sql_content_and_time_filters(tmp_path):
+    """SQL search honors substring and time bounds."""
+    from datetime import timedelta
+
+    from whatsloon.persistence.models import utcnow
+
+    factory = session_factory(f"sqlite:///{tmp_path}/admin.db")
+    repos = SQLMessageRepository(factory)
+    base = utcnow()
+    repos.save(_message(content_text="Hello SQL", created_at=base))
+    repos.save(
+        _message(
+            id="m-2",
+            content_text="Unrelated",
+            created_at=base + timedelta(hours=2),
+            idempotency_key="sql-key-2",
+        )
+    )
+    assert [
+        m.id for m in repos.search(MessageFilter(tenant_id="t-1", content_contains="hello"))
+    ] == ["m-1"]
+    assert [
+        m.id for m in repos.search(MessageFilter(tenant_id="t-1", since=base + timedelta(hours=1)))
+    ] == ["m-2"]

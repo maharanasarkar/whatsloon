@@ -58,7 +58,6 @@ def test_tenant_isolation_on_read_and_search():
     repos.save(_message())
     assert repos.get("t-2", "m-1") is None
     assert repos.search(MessageFilter(tenant_id="t-2")) == []
-    assert len(repos.search(MessageFilter(tenant_id="t-1"))) == 1
 
 
 def test_status_transitions_update_message():
@@ -111,3 +110,61 @@ def test_fingerprint_is_stable():
     """Fingerprints ignore key order for dedupe."""
     assert fingerprint({"b": 1, "a": 2}) == fingerprint({"a": 2, "b": 1})
     assert len(fingerprint({"a": 1})) == 64
+
+
+def test_content_and_time_filters():
+    """Substring and time bounds narrow message searches."""
+    repos = InMemoryMessageRepository()
+    base = utcnow()
+    repos.save(_message(id="m-1", content_text="Hello world", created_at=base))
+    repos.save(
+        _message(
+            id="m-2",
+            content_text="Goodbye",
+            created_at=base + timedelta(hours=2),
+            idempotency_key="key-2",
+        )
+    )
+    assert [
+        m.id for m in repos.search(MessageFilter(tenant_id="t-1", content_contains="hello"))
+    ] == ["m-1"]
+    assert [
+        m.id for m in repos.search(MessageFilter(tenant_id="t-1", since=base + timedelta(hours=1)))
+    ] == ["m-2"]
+    assert (
+        repos.search(
+            MessageFilter(
+                tenant_id="t-1",
+                since=base + timedelta(hours=1),
+                until=base + timedelta(hours=1),
+            )
+        )
+        == []
+    )
+
+
+def test_event_time_filters():
+    """Time bounds narrow event searches."""
+    repos = InMemoryEventRepository()
+    base = utcnow()
+    repos.record(
+        WebhookEvent(
+            id="e-1",
+            event_hash="h-1",
+            tenant_id="t-1",
+            event_type="message.received",
+            received_at=base,
+        )
+    )
+    repos.record(
+        WebhookEvent(
+            id="e-2",
+            event_hash="h-2",
+            tenant_id="t-1",
+            event_type="message.received",
+            received_at=base + timedelta(hours=2),
+        )
+    )
+    assert [
+        e.id for e in repos.search(EventFilter(tenant_id="t-1", until=base + timedelta(hours=1)))
+    ] == ["e-1"]

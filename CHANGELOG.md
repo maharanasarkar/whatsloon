@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Admin console HTML UI: server-rendered dashboard, conversations, messages, events pages (Jinja2 + HTMX, no JS build), HTMX row partials, bundled stylesheet, `docs/admin.md`.
+- Admin thread view, content/date search, and pagination across list pages.
 
 ### Fixed
 

@@ -23,6 +23,15 @@
       {% endfor %}
     </select>
   </label>
+  <label>Search content
+    <input type="text" name="q" value="{{ q }}" placeholder="substring" autocomplete="off">
+  </label>
+  <label>Since
+    <input type="date" name="since" value="{{ since }}">
+  </label>
+  <label>Until
+    <input type="date" name="until" value="{{ until }}">
+  </label>
   <button type="submit">Apply</button>
 </form>
 {% if items %}
@@ -32,6 +41,9 @@
     {% include "_message_rows.html" %}
   </tbody>
 </table>
+{% set base_url = root + "/ui/messages" %}
+{% set query_extra = "tenant_id=" + tenant_id + "&token=" + token + "&status=" + status + "&direction=" + direction + "&q=" + q + "&since=" + since + "&until=" + until + "&" %}
+{% include "_pagination.html" %}
 {% else %}
 <div class="empty" role="status">No messages match these filters.</div>
 {% endif %}

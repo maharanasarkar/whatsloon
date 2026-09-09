@@ -23,6 +23,9 @@
     {% include "_conversation_rows.html" %}
   </tbody>
 </table>
+{% set base_url = root + "/ui/conversations" %}
+{% set query_extra = "tenant_id=" + tenant_id + "&token=" + token + "&" %}
+{% include "_pagination.html" %}
 {% else %}
 <div class="empty" role="status">No conversations found. Adjust the limit or check another tenant.</div>
 {% endif %}

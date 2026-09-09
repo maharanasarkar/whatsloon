@@ -15,6 +15,12 @@
       {% endfor %}
     </select>
   </label>
+  <label>Since
+    <input type="date" name="since" value="{{ since }}">
+  </label>
+  <label>Until
+    <input type="date" name="until" value="{{ until }}">
+  </label>
   <button type="submit">Apply</button>
 </form>
 {% if items %}
@@ -24,6 +30,9 @@
     {% include "_event_rows.html" %}
   </tbody>
 </table>
+{% set base_url = root + "/ui/events" %}
+{% set query_extra = "tenant_id=" + tenant_id + "&token=" + token + "&processing_status=" + processing_status + "&since=" + since + "&until=" + until + "&" %}
+{% include "_pagination.html" %}
 {% else %}
 <div class="empty" role="status">No events match these filters.</div>
 {% endif %}

@@ -50,6 +50,19 @@ def _store():
             structured_payload={"text": "hi"},
         )
     )
+    messages.save(
+        Message(
+            id="m-2",
+            conversation_id="c-1",
+            tenant_id="t-1",
+            direction=Direction.INBOUND,
+            sender="919000000001",
+            recipient="919876543210",
+            content_text="Reply here",
+            status="read",
+            structured_payload={"text": "Reply here"},
+        )
+    )
     events.record(
         WebhookEvent(
             id="e-1",
@@ -156,3 +169,49 @@ def test_conversations_empty_state():
     """Unknown tenants render empty states, not blank pages."""
     html = _client().get("/ui/conversations" + _q("owner-token", "nobody")).text
     assert 'role="status"' in html
+
+
+def test_conversation_thread_chronological_and_linked():
+    """Thread pages show bubbles oldest-first with detail links."""
+    client = _client()
+    html = client.get("/ui/conversations/c-1" + _q("viewer-token")).text
+    assert "91••••3210" in html
+    assert "919876543210" not in html
+    first = html.index("Hello UI world")
+    second = html.index("Reply here")
+    assert first < second
+    assert "/ui/messages/m-1" in html
+    assert client.get("/ui/conversations/nope" + _q("viewer-token")).status_code == 404
+    assert client.get("/ui/conversations/c-1" + _q("viewer-token", "t-2")).status_code == 403
+
+
+def test_pagination_prev_next():
+    """List pages expose working prev/next navigation."""
+    client = _client()
+    page1 = client.get("/ui/messages" + _q("viewer-token") + "&limit=1&offset=0").text
+    assert "offset=1" in page1
+    assert "offset=-" not in page1
+    page2 = client.get("/ui/messages" + _q("viewer-token") + "&limit=1&offset=1").text
+    assert "offset=0" in page2
+    assert "Hello UI world" in page2 or "Reply here" in page2
+
+
+def test_content_search_and_dates():
+    """Substring search and date bounds filter messages; bad dates ignored."""
+    client = _client()
+    assert "Reply here" in client.get("/ui/messages" + _q("viewer-token") + "&q=reply").text
+    assert "No messages match" in client.get("/ui/messages" + _q("viewer-token") + "&q=zzz").text
+    assert (
+        "Hello UI world"
+        in client.get("/ui/messages" + _q("viewer-token") + "&since=2000-01-01").text
+    )
+    assert (
+        "No messages match"
+        in client.get("/ui/messages" + _q("viewer-token") + "&since=2999-01-01").text
+    )
+    assert (
+        "Hello UI world"
+        in client.get("/ui/messages" + _q("viewer-token") + "&since=not-a-date").text
+    )
+    fragment = client.get("/ui/partials/messages" + _q("viewer-token") + "&q=reply").text
+    assert "Reply here" in fragment and "<html" not in fragment

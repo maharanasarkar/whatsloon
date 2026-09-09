@@ -1,0 +1,11 @@
+{# Shared prev/next pagination. Expects: base_url, query_extra, offset, limit, has_prev, has_more, prev_offset, next_offset. #}
+{% if has_prev or has_more %}
+<nav class="pager" aria-label="Pagination">
+  {% if has_prev %}
+  <a class="btn" href="{{ base_url }}?{{ query_extra }}limit={{ limit }}&amp;offset={{ prev_offset }}">Previous</a>
+  {% endif %}
+  {% if has_more %}
+  <a class="btn" href="{{ base_url }}?{{ query_extra }}limit={{ limit }}&amp;offset={{ next_offset }}">Next</a>
+  {% endif %}
+</nav>
+{% endif %}
