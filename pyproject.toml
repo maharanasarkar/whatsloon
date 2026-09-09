@@ -1,5 +1,7 @@
 [build-system]
-requires = ["setuptools>=84.0.0", "wheel"]
+# Lower bound stays 3.9-compatible: pip resolves the newest setuptools
+# supporting each interpreter (84.x needs >=3.10, markers unsupported here).
+requires = ["setuptools>=76.1.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
