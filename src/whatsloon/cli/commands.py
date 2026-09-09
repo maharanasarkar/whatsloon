@@ -40,6 +40,21 @@ def format_error(exc: BaseException) -> str:
     return f"{type(exc).__name__}: {message}"
 
 
+def mask_phone(value: str) -> str:
+    """Mask a phone identifier for display, keeping country context.
+
+    Args:
+        value: Display phone number.
+
+    Returns:
+        Masked form exposing at most the last four digits.
+    """
+    digits = "".join(c for c in value if c.isdigit())
+    if len(digits) <= 4:
+        return "••••"
+    return f"{digits[:2]}••••{digits[-4:]}"
+
+
 def load_env_file(path: Path) -> dict[str, str]:
     """Load KEY=VALUE pairs from a dotenv file without overriding env.
 
@@ -122,7 +137,7 @@ def cmd_doctor() -> int:
     print(f"config: OK (api_version={client.version.value}, latest={LATEST_VERSION})")
     try:
         number = client.business.get_phone_number(client.phone_number_id)
-        print(f"connectivity: OK (display={number.display_phone_number or 'unknown'})")
+        print(f"connectivity: OK (display={mask_phone(number.display_phone_number or 'unknown')})")
     except Exception as exc:
         print(f"connectivity: FAIL ({format_error(exc)})")
         return 1
