@@ -76,14 +76,14 @@ def test_per_type_methods_cover_all_senders():
     client.messages.send_sticker(to="919876543210", media_id="m")
     client.messages.send_reaction(to="919876543210", message_id="w-1", emoji="👍")
     client.messages.send_location(to="919876543210", latitude=1.0, longitude=2.0)
-    client.messages.send_contacts(to="919876543210", contacts=[{"name": "A"}])
+    client.messages.send_contacts(to="919876543210", contacts=[{"name": {"formatted_name": "A"}}])
     client.messages.send_template(to="919876543210", template_name="t", language_code="en_US")
     client.messages.send_list(
         to="919876543210",
         content=ListMessage(body_text="b", button_text="Menu", sections=[{"rows": []}]),
     )
     client.messages.send_location_request(to="919876543210", body_text="Share?")
-    client.messages.send_typing(to="919876543210", status="typing")
+    client.messages.send_typing(message_id="w-1")
     client.messages.mark_read(message_id="w-1")
     kinds = [call.json_body.get("type") for call in fake.seen]
     assert kinds == [
@@ -99,7 +99,7 @@ def test_per_type_methods_cover_all_senders():
         "template",
         "interactive",
         "interactive",
-        "typing",
+        None,
         None,
     ]
 

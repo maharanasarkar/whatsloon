@@ -14,7 +14,7 @@ from whatsloon.messages.models import (
     OutboundMessage,
     ReplyButtonsMessage,
     TextMessage,
-    TypingStatus,
+    TypingIndicator,
 )
 
 
@@ -56,7 +56,9 @@ def test_contacts_require_non_empty_list():
     """Contacts reject empty lists like the 2.x builder."""
     with pytest.raises(ValidationError):
         ContactsMessage(contacts=[])
-    assert len(ContactsMessage(contacts=[{"name": "A"}]).contacts) == 1
+    with pytest.raises(ValidationError):
+        ContactsMessage(contacts=[{"name": {"first_name": "A"}}])
+    assert len(ContactsMessage(contacts=[{"name": {"formatted_name": "A"}}]).contacts) == 1
 
 
 def test_list_limits():
@@ -89,11 +91,11 @@ def test_reply_buttons_limits_and_header():
     assert built.buttons[0].title == "Yes"
 
 
-def test_typing_status_values():
-    """Only typing/paused statuses are accepted."""
-    assert TypingStatus(status="typing").status == "typing"
+def test_typing_indicator_requires_message_id():
+    """Typing targets an inbound message per Meta's read+indicator shape."""
+    assert TypingIndicator(message_id="w-1").message_id == "w-1"
     with pytest.raises(ValidationError):
-        TypingStatus(status="idle")
+        TypingIndicator(message_id="")
 
 
 def test_envelope_reply_to_rejects_empty():

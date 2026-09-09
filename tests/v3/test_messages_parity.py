@@ -86,7 +86,12 @@ def test_reaction_location_contacts_parity(legacy):
     assert serialize_location(
         TO, m.LocationMessage(latitude=12.9, longitude=77.6, name="N", address="A")
     ) == legacy._build_location_payload(latitude=12.9, longitude=77.6, name="N", address="A")
-    contacts = [{"name": {"first_name": "A"}, "phones": [{"phone": "+919876543210"}]}]
+    contacts = [
+        {
+            "name": {"formatted_name": "A", "first_name": "A"},
+            "phones": [{"phone": "+919876543210"}],
+        }
+    ]
     assert serialize_contacts(
         TO, m.ContactsMessage(contacts=contacts)
     ) == legacy._build_contact_payload(contacts=contacts)
@@ -134,13 +139,25 @@ def test_interactive_parity(legacy):
 
 
 def test_operations_parity(legacy):
-    """Typing and read-receipt payloads match, anomalies included."""
-    assert serialize_typing(
-        TO, m.TypingStatus(status="typing")
-    ) == legacy._build_typing_indicator_payload(status="typing")
+    """Read-receipt payloads match, anomalies included."""
     assert serialize_mark_read(m.MarkRead(message_id="w-1")) == legacy._build_read_payload(
         message_id="w-1"
     )
+
+
+def test_typing_matches_meta_not_legacy():
+    """Typing follows Meta's read+indicator shape, diverging from legacy.
+
+    The 2.x builder emits a standalone ``type: typing`` payload that Meta
+    rejects; the v3 serializer emits the documented mark-read with a typing
+    indicator against an inbound message ID instead.
+    """
+    assert serialize_typing(m.TypingIndicator(message_id="w-1")) == {
+        "messaging_product": "whatsapp",
+        "status": "read",
+        "message_id": "w-1",
+        "typing_indicator": {"type": "text"},
+    }
 
 
 def test_envelope_context_parity(legacy):

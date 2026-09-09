@@ -56,6 +56,17 @@ def test_unknown_future_preserved():
     assert event.raw["future_surface"]["never_seen_before"] is True
 
 
+def test_live_fixture_parses_from_user_id():
+    """Live-captured traffic exposes BSUID on the message object."""
+    events = parse_body(_load("live_message_received.json"), api_version="v26.0")
+    assert len(events) == 1
+    event = events[0]
+    assert isinstance(event, WebhookMessageReceived)
+    assert event.message_id == "wamid.live-msg-1"
+    assert event.user_id == "bsuid-live-user-1"
+    assert event.text_body == "Hello live!"
+
+
 def test_malformed_bodies_raise():
     """Non-JSON and non-object bodies raise without event loss ambiguity."""
     with pytest.raises(InvalidPayloadError):

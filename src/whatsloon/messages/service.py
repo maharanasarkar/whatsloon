@@ -413,24 +413,26 @@ class MessageService:
         """
         return self.send(_envelope(to, m.LocationRequestMessage(body_text=body_text)))
 
-    def send_typing(self, *, to: str, status: str) -> SendMessageResult:
-        """Send a typing indicator.
+    def send_typing(self, *, message_id: str) -> SendMessageResult:
+        """Show a typing indicator against an inbound message.
+
+        Per Meta's API the indicator rides on a mark-read; the legacy
+        standalone typing payload is rejected.
 
         Args:
-            to: Destination identifier.
-            status: Either ``"typing"`` or ``"paused"``.
+            message_id: Inbound message to acknowledge with typing shown.
 
         Returns:
             Typed result.
         """
-        payload = serialize_typing(normalize_recipient(to), m.TypingStatus(status=status))
+        payload = serialize_typing(m.TypingIndicator(message_id=message_id))
         request = Request(
             method="POST",
             path=self.adapter.messages_path(self.phone_number_id),
             json_body=payload,
         )
         response = self.transport.send(request)
-        return parse_send_result(self.adapter, to=normalize_recipient(to), response=response)
+        return parse_send_result(self.adapter, to="", response=response)
 
     def mark_read(self, *, message_id: str) -> SendMessageResult:
         """Mark a message as read.

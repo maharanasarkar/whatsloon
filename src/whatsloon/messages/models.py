@@ -145,10 +145,31 @@ class ContactsMessage(BaseModel):
     """Contact list message.
 
     Attributes:
-        contacts: Non-empty list of Meta contact objects.
+        contacts: Non-empty list of Meta contact objects. Meta requires
+            ``name.formatted_name`` on every contact.
     """
 
     contacts: list[dict[str, Any]] = Field(min_length=1)
+
+    @field_validator("contacts")
+    @classmethod
+    def _require_formatted_names(cls, contacts: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Require Meta's mandatory formatted names.
+
+        Args:
+            contacts: Candidate contact list.
+
+        Returns:
+            The list unchanged.
+
+        Raises:
+            ValueError: If any contact lacks ``name.formatted_name``.
+        """
+        for contact in contacts:
+            name = contact.get("name") if isinstance(contact, dict) else None
+            if not isinstance(name, dict) or not name.get("formatted_name"):
+                raise ValueError("Every contact requires name.formatted_name.")
+        return contacts
 
 
 class TemplateComponent(BaseModel):
@@ -350,32 +371,17 @@ class LocationRequestMessage(BaseModel):
     body_text: str = Field(min_length=1)
 
 
-class TypingStatus(BaseModel):
+class TypingIndicator(BaseModel):
     """Typing indicator operation (not an envelope content type).
 
+    Per Meta's API the indicator rides on a mark-read of an inbound
+    message; there is no standalone typing message type.
+
     Attributes:
-        status: Either ``"typing"`` or ``"paused"``.
+        message_id: Inbound message to acknowledge with typing shown.
     """
 
-    status: str
-
-    @field_validator("status")
-    @classmethod
-    def _check_status(cls, status: str) -> str:
-        """Validate the indicator status.
-
-        Args:
-            status: Candidate status.
-
-        Returns:
-            The status unchanged.
-
-        Raises:
-            ValueError: If not typing or paused.
-        """
-        if status not in ("typing", "paused"):
-            raise ValueError("Status must be 'typing' or 'paused'.")
-        return status
+    message_id: str = Field(min_length=1)
 
 
 class MarkRead(BaseModel):

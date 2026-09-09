@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Admin console HTML UI: server-rendered dashboard, conversations, messages, events pages (Jinja2 + HTMX, no JS build), HTMX row partials, bundled stylesheet, `docs/admin.md`.
 
+### Fixed
+
+- Typing indicators now follow Meta's API (mark-read with typing indicator against an inbound message ID) instead of the rejected standalone `type: typing` payload. `messages.send_typing()` takes `message_id`; the legacy shape stays frozen under `whatsloon.compat`.
+
+### Changed
+
+- `ContactsMessage` now requires `name.formatted_name` per Meta's schema, failing fast client-side instead of with a Meta 400.
+
 ## [3.0.0] - 2026-09-06
 
 ### Added
