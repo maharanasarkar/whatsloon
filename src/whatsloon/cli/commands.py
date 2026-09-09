@@ -121,8 +121,8 @@ def cmd_doctor() -> int:
         return 1
     print(f"config: OK (api_version={client.version.value}, latest={LATEST_VERSION})")
     try:
-        number = client.business.get_phone_number(client.phone_number_id)
-        print(f"connectivity: OK (display={number.display_phone_number or 'unknown'})")
+        client.business.get_phone_number(client.phone_number_id)
+        print("connectivity: OK")
     except Exception as exc:
         print(f"connectivity: FAIL ({format_error(exc)})")
         return 1
