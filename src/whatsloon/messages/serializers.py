@@ -395,11 +395,13 @@ def serialize_location_request(to: str, content: m.LocationRequestMessage) -> di
     )
 
 
-def serialize_typing(to: str, content: m.TypingStatus) -> dict[str, Any]:
-    """Serialize a typing indicator (no ``recipient_type``, legacy parity).
+def serialize_typing(content: m.TypingIndicator) -> dict[str, Any]:
+    """Serialize a typing indicator per Meta's read+indicator shape.
+
+    The indicator attaches to a mark-read of an inbound message; the
+    legacy standalone ``type: typing`` payload is rejected by Meta.
 
     Args:
-        to: Destination identifier.
         content: Typed content.
 
     Returns:
@@ -407,9 +409,9 @@ def serialize_typing(to: str, content: m.TypingStatus) -> dict[str, Any]:
     """
     return {
         "messaging_product": "whatsapp",
-        "to": to,
-        "type": "typing",
-        "typing": {"status": content.status},
+        "status": "read",
+        "message_id": content.message_id,
+        "typing_indicator": {"type": "text"},
     }
 
 

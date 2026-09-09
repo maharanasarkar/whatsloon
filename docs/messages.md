@@ -61,9 +61,14 @@ async with WhatsApp.async_client(access_token="...", phone_number_id="...") as w
 | `send_flow_message` | `messages.send_flow` |
 | `send_address_message` | `messages.send_address` |
 | `send_location_request_message` | `messages.send_location_request` |
-| `send_typing_indicator` | `messages.send_typing` |
+| `send_typing_indicator` | `messages.send_typing(message_id=...)` (see note) |
 | `mark_message_as_read` | `messages.mark_read` |
 | `send_contextual_reply` | any send with `reply_to=` |
+
+> Typing indicators follow Meta's API: the indicator rides on a mark-read
+> of an **inbound** message (`messages.send_typing(message_id="wamid...")`).
+> The legacy standalone `type: typing` payload is rejected by Meta with a
+> schema error; it remains frozen under `whatsloon.compat` for 2.x parity.
 
 The 2.x classes remain available under `whatsloon.compat` with a
 deprecation warning.
