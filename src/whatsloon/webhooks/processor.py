@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import logging
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -27,6 +28,8 @@ from whatsloon.webhooks.events import (
 from whatsloon.webhooks.parser import parse_body
 from whatsloon.webhooks.router import EventRouter
 from whatsloon.webhooks.verifier import verify_signature
+
+logger = logging.getLogger("whatsloon.webhooks")
 
 TenantResolver = Callable[[NormalizedEvent], str]
 """Resolve the owning tenant for a normalized event."""
@@ -125,6 +128,8 @@ class WebhookProcessor:
         api_version: Adapter version stamp for parsing.
         retain_raw: Whether to retain raw payloads (opt-in).
         queue: Optional enqueue hook; when set, handling is deferred.
+        message_store: Optional repository receiving inbound records.
+        conversation_store: Optional repository receiving conversation records.
     """
 
     router: EventRouter
@@ -133,6 +138,8 @@ class WebhookProcessor:
     api_version: str = ""
     retain_raw: bool = False
     queue: Optional[EnqueueHook] = None
+    message_store: Any = None
+    conversation_store: Any = None
 
     def process(
         self, raw_body: bytes, signature_header: Optional[str], *, app_secret: Any
@@ -204,7 +211,61 @@ class WebhookProcessor:
             has_raw_payload=self.retain_raw,
         )
         raw = event.model_dump() if self.retain_raw else None
-        return self.events.record(record, raw), False
+        stored = self.events.record(record, raw)
+        self._materialize_message(event, tenant_id)
+        return stored, False
+
+    def _materialize_message(self, event: NormalizedEvent, tenant_id: str) -> None:
+        """Persist inbound message records for received events (best-effort).
+
+        Storage failures are logged, never raised: the receipt is
+        authoritative and bookkeeping must not fail a delivery.
+
+        Args:
+            event: Normalized event.
+            tenant_id: Owning tenant.
+        """
+        if self.message_store is None or event.event_type != "message.received":
+            return
+        try:
+            from whatsloon.persistence.models import (
+                Conversation,
+                Direction,
+                Message,
+                utcnow,
+            )
+
+            sender = getattr(event, "sender", "")
+            conversation_id = getattr(event, "recipient_phone_id", "") or sender
+            if self.conversation_store is not None:
+                stored = self.conversation_store.upsert(
+                    Conversation(
+                        id=uuid.uuid4().hex,
+                        tenant_id=tenant_id,
+                        external_chat_id=conversation_id,
+                        participant=sender,
+                        last_activity_at=utcnow(),
+                    )
+                )
+                conversation_id = stored.id
+            self.message_store.save(
+                Message(
+                    id=uuid.uuid4().hex,
+                    conversation_id=conversation_id,
+                    tenant_id=tenant_id,
+                    direction=Direction.INBOUND,
+                    external_message_id=getattr(event, "message_id", None),
+                    sender=sender,
+                    recipient=getattr(event, "recipient_phone_id", ""),
+                    message_type=getattr(event, "message_type", "text"),
+                    content_text=getattr(event, "text_body", None),
+                    api_version=getattr(event, "api_version", ""),
+                    status="received",
+                    received_at=utcnow(),
+                )
+            )
+        except Exception as exc:
+            logger.warning("Inbound persistence failed: %s", type(exc).__name__)
 
     def _finish(self, record: Any, *, status: ProcessingStatus, error: str = "") -> None:
         """Persist a processing outcome.

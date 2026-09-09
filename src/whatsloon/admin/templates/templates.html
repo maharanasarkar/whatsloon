@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Templates — whatsloon admin{% endblock %}
+{% block content %}
+<h1>Message templates</h1>
+<form class="filters" method="get" action="{{ root }}/ui/templates">
+  <input type="hidden" name="tenant_id" value="{{ tenant_id }}">
+  <input type="hidden" name="token" value="{{ token }}">
+  <label>WABA ID
+    <input type="text" name="waba_id" value="{{ waba_id }}" autocomplete="off">
+  </label>
+  <button type="submit">List</button>
+</form>
+{% if waba_id %}
+{% if items %}
+<table>
+  <thead><tr><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Language</th></tr></thead>
+  <tbody>
+    {% for t in items %}
+    <tr><td>{{ t.name }}</td><td><span class="badge">{{ t.status }}</span></td><td>{{ t.language }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty" role="status">No templates found for this WABA.</div>
+{% endif %}
+<h2>Create template</h2>
+<form method="post" action="{{ root }}/ui/templates/create" class="stacked">
+  <input type="hidden" name="tenant_id" value="{{ tenant_id }}">
+  <input type="hidden" name="token" value="{{ token }}">
+  <input type="hidden" name="waba_id" value="{{ waba_id }}">
+  <label>Name (lowercase, underscores)
+    <input type="text" name="name" required autocomplete="off">
+  </label>
+  <label>Language
+    <input type="text" name="language" value="en_US" required autocomplete="off">
+  </label>
+  <label>Category
+    <select name="category">
+      <option value="UTILITY">UTILITY</option>
+      <option value="MARKETING">MARKETING</option>
+      <option value="AUTHENTICATION">AUTHENTICATION</option>
+    </select>
+  </label>
+  <button type="submit" class="primary">Create</button>
+</form>
+{% endif %}
+{% endblock %}

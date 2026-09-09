@@ -157,8 +157,37 @@ def test_retry_failed_event_after_fix():
     assert retried.outcome == "handled"
     assert attempts == ["wamid.fixture-msg-1", "wamid.fixture-msg-1"]
     record = events.get("t-1", first.event_id)
+    assert record is not None
     assert record.retry_count == 1
     assert record.processing_status == ProcessingStatus.PROCESSED
+
+
+def test_inbound_materialization():
+    """Inbound receipts materialize message and conversation records."""
+    from whatsloon.persistence.base import MessageFilter
+    from whatsloon.persistence.repositories import (
+        InMemoryConversationRepository,
+        InMemoryMessageRepository,
+    )
+
+    messages = InMemoryMessageRepository()
+    conversations = InMemoryConversationRepository()
+    router = EventRouter()
+    router.register("message.received", lambda event: None)
+    processor = WebhookProcessor(
+        router=router,
+        events=InMemoryEventRepository(),
+        tenant_resolver=lambda e: "t-1",
+        message_store=messages,
+        conversation_store=conversations,
+    )
+    body = _body()
+    assert processor.process(body, _signed(body), app_secret=SECRET)[0].outcome == "handled"
+    stored = messages.search(MessageFilter(tenant_id="t-1"))
+    assert len(stored) == 1
+    assert stored[0].direction.value == "inbound"
+    assert stored[0].content_text == "Hello!"
+    assert conversations.list("t-1")[0].id == stored[0].conversation_id
 
 
 def test_retry_missing_and_unavailable():

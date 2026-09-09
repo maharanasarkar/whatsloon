@@ -17,6 +17,11 @@
         <a href="{{ root }}/ui/conversations?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'conversations' %} aria-current="page"{% endif %}>Conversations</a>
         <a href="{{ root }}/ui/messages?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'messages' %} aria-current="page"{% endif %}>Messages</a>
         <a href="{{ root }}/ui/events?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'events' %} aria-current="page"{% endif %}>Events</a>
+        {% if can_manage %}
+        <a href="{{ root }}/ui/templates?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'templates' %} aria-current="page"{% endif %}>Templates</a>
+        <a href="{{ root }}/ui/media?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'media' %} aria-current="page"{% endif %}>Media</a>
+        <a href="{{ root }}/ui/groups?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'groups' %} aria-current="page"{% endif %}>Groups</a>
+        {% endif %}
       </nav>
       <form class="tenant-form" method="get" action="{{ root }}/ui/dashboard">
         <label>Tenant
@@ -25,6 +30,13 @@
         <input type="hidden" name="token" value="{{ token }}">
         <button type="submit">Switch</button>
       </form>
+      {% if via_session %}
+      <form method="post" action="{{ root }}/ui/logout">
+        <button type="submit">Log out</button>
+      </form>
+      {% else %}
+      <a class="btn" href="{{ root }}/ui/login">Log in</a>
+      {% endif %}
     </div>
   </header>
   <main id="content">

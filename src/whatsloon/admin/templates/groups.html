@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Groups — whatsloon admin{% endblock %}
+{% block content %}
+<h1>Groups</h1>
+<p>Groups are invite-only: new members join via invite links.</p>
+{% if items %}
+<table>
+  <thead><tr><th scope="col">ID</th><th scope="col">Subject</th><th scope="col">Invite link</th></tr></thead>
+  <tbody>
+    {% for g in items %}
+    <tr><td><code>{{ g.id }}</code></td><td>{{ g.subject }}</td><td>{{ g.invite_link or "—" }}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty" role="status">No groups found for this number.</div>
+{% endif %}
+{% endblock %}

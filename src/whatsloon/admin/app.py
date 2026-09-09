@@ -34,7 +34,10 @@ class RepositoryBundle:
 
 
 def create_app(
-    store: RepositoryBundle, auth: AdminAuth, processor: Optional[Any] = None
+    store: RepositoryBundle,
+    auth: AdminAuth,
+    processor: Optional[Any] = None,
+    wa: Optional[Any] = None,
 ) -> FastAPI:
     """Create the admin FastAPI application.
 
@@ -42,6 +45,7 @@ def create_app(
         store: Repository bundle for read views.
         auth: Pluggable authentication backend.
         processor: Optional webhook processor enabling event retries.
+        wa: Optional v3 client enabling resource managers.
 
     Returns:
         Configured FastAPI application.
@@ -56,7 +60,7 @@ def create_app(
     try:
         from whatsloon.admin.ui import create_ui_router
 
-        app.include_router(create_ui_router(store, auth, processor=processor))
+        app.include_router(create_ui_router(store, auth, processor=processor, wa=wa))
     except ImportError:
         # jinja2 missing: HTML pages skipped, JSON API still served.
         pass
