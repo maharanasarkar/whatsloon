@@ -1,2 +1,2 @@
 -e .[dev]
-pre-commit>=3
+pre-commit>=4.6.2
