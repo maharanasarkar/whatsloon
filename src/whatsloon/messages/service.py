@@ -7,6 +7,8 @@ transport call.
 
 from __future__ import annotations
 
+import logging
+import uuid
 from typing import Any, Optional
 
 from whatsloon.api_versions.base import VersionAdapter
@@ -20,6 +22,8 @@ from whatsloon.messages.serializers import (
 from whatsloon.transport.async_ import AsyncTransport
 from whatsloon.transport.request import Request
 from whatsloon.transport.sync import SyncTransport
+
+logger = logging.getLogger("whatsloon.messages")
 
 
 def build_envelope_request(
@@ -61,6 +65,68 @@ def _envelope(
     )
 
 
+def persist_outbound(
+    *,
+    message_store: Any,
+    conversation_store: Any,
+    tenant_id: str,
+    phone_number_id: str,
+    envelope: m.OutboundMessage,
+    result: SendMessageResult,
+) -> None:
+    """Persist an outbound send to message stores (best-effort).
+
+    Storage failures are logged, never raised: the send result is
+    authoritative and bookkeeping must not fail a delivered message.
+
+    Args:
+        message_store: Message repository or None.
+        conversation_store: Conversation repository or None.
+        tenant_id: Owning tenant.
+        phone_number_id: Sender phone number ID.
+        envelope: Sent envelope.
+        result: Typed send result.
+    """
+    if message_store is None:
+        return
+    try:
+        from whatsloon.persistence.models import Conversation, Direction, Message, utcnow
+
+        conversation_id = envelope.to
+        if conversation_store is not None:
+            conversation = conversation_store.upsert(
+                Conversation(
+                    id=uuid.uuid4().hex,
+                    tenant_id=tenant_id,
+                    external_chat_id=envelope.to,
+                    participant=envelope.to,
+                    last_activity_at=utcnow(),
+                )
+            )
+            conversation_id = conversation.id
+        content = envelope.content
+        message_store.save(
+            Message(
+                id=uuid.uuid4().hex,
+                conversation_id=conversation_id,
+                tenant_id=tenant_id,
+                direction=Direction.OUTBOUND,
+                external_message_id=result.message_id,
+                sender=phone_number_id,
+                recipient=envelope.to,
+                message_type=type(content).__name__.replace("Message", "").lower(),
+                content_text=getattr(content, "body", None) or getattr(content, "body_text", None),
+                api_version=result.api_version,
+                status="sent",
+                sent_at=utcnow(),
+                correlation_id=result.correlation_id,
+                idempotency_key=result.correlation_id,
+            )
+        )
+    except Exception as exc:
+        logger.warning("Outbound persistence failed: %s", type(exc).__name__)
+
+
 class MessageService:
     """Synchronous message operations.
 
@@ -68,10 +134,20 @@ class MessageService:
         adapter: Version adapter for serialization.
         transport: Shared pooled transport.
         phone_number_id: Sender phone number ID.
+        message_store: Optional repository receiving outbound records.
+        conversation_store: Optional repository receiving conversation records.
+        tenant_id: Tenant attached to persisted records.
     """
 
     def __init__(
-        self, adapter: VersionAdapter, transport: SyncTransport, phone_number_id: str
+        self,
+        adapter: VersionAdapter,
+        transport: SyncTransport,
+        phone_number_id: str,
+        *,
+        message_store: Any = None,
+        conversation_store: Any = None,
+        tenant_id: str = "default",
     ) -> None:
         """Initialize the service.
 
@@ -79,10 +155,16 @@ class MessageService:
             adapter: Version adapter for serialization.
             transport: Shared pooled transport.
             phone_number_id: Sender phone number ID.
+            message_store: Optional repository receiving outbound records.
+            conversation_store: Optional repository receiving conversation records.
+            tenant_id: Tenant attached to persisted records.
         """
         self.adapter = adapter
         self.transport = transport
         self.phone_number_id = phone_number_id
+        self.message_store = message_store
+        self.conversation_store = conversation_store
+        self.tenant_id = tenant_id
 
     def send(self, envelope: m.OutboundMessage) -> SendMessageResult:
         """Send a typed envelope.
@@ -101,7 +183,16 @@ class MessageService:
             self.adapter, phone_number_id=self.phone_number_id, envelope=envelope
         )
         response = self.transport.send(request)
-        return parse_send_result(self.adapter, to=envelope.to, response=response)
+        result = parse_send_result(self.adapter, to=envelope.to, response=response)
+        persist_outbound(
+            message_store=self.message_store,
+            conversation_store=self.conversation_store,
+            tenant_id=self.tenant_id,
+            phone_number_id=self.phone_number_id,
+            envelope=envelope,
+            result=result,
+        )
+        return result
 
     def send_text(
         self, *, to: str, body: str, preview_url: bool = True, reply_to: Optional[str] = None
@@ -460,10 +551,20 @@ class AsyncMessageService:
         adapter: Version adapter for serialization.
         transport: Shared pooled async transport.
         phone_number_id: Sender phone number ID.
+        message_store: Optional repository receiving outbound records.
+        conversation_store: Optional repository receiving conversation records.
+        tenant_id: Tenant attached to persisted records.
     """
 
     def __init__(
-        self, adapter: VersionAdapter, transport: AsyncTransport, phone_number_id: str
+        self,
+        adapter: VersionAdapter,
+        transport: AsyncTransport,
+        phone_number_id: str,
+        *,
+        message_store: Any = None,
+        conversation_store: Any = None,
+        tenant_id: str = "default",
     ) -> None:
         """Initialize the service.
 
@@ -471,10 +572,16 @@ class AsyncMessageService:
             adapter: Version adapter for serialization.
             transport: Shared pooled async transport.
             phone_number_id: Sender phone number ID.
+            message_store: Optional repository receiving outbound records.
+            conversation_store: Optional repository receiving conversation records.
+            tenant_id: Tenant attached to persisted records.
         """
         self.adapter = adapter
         self.transport = transport
         self.phone_number_id = phone_number_id
+        self.message_store = message_store
+        self.conversation_store = conversation_store
+        self.tenant_id = tenant_id
 
     async def send(self, envelope: m.OutboundMessage) -> SendMessageResult:
         """Send a typed envelope.
@@ -490,7 +597,16 @@ class AsyncMessageService:
             self.adapter, phone_number_id=self.phone_number_id, envelope=envelope
         )
         response = await self.transport.asend(request)
-        return parse_send_result(self.adapter, to=envelope.to, response=response)
+        result = parse_send_result(self.adapter, to=envelope.to, response=response)
+        persist_outbound(
+            message_store=self.message_store,
+            conversation_store=self.conversation_store,
+            tenant_id=self.tenant_id,
+            phone_number_id=self.phone_number_id,
+            envelope=envelope,
+            result=result,
+        )
+        return result
 
     async def send_text(
         self, *, to: str, body: str, preview_url: bool = True, reply_to: Optional[str] = None
@@ -563,4 +679,5 @@ __all__ = [
     "AsyncMessageService",
     "MessageService",
     "build_envelope_request",
+    "persist_outbound",
 ]

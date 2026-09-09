@@ -51,6 +51,18 @@ a skip link, keyboard-native controls, and explicit empty and error states.
   (`since`/`until` as YYYY-MM-DD); invalid dates are ignored, never errors.
 - List pages paginate with prev/next links preserving active filters.
 
+## Failure center
+
+Failed events show a **Retry** button (and `POST /events/{id}/retry` on the
+JSON API) that re-dispatches the stored event from its retained raw payload
+and bumps the retry count. Retries require:
+
+- a processor wired into `create_app(store, auth, processor=...)`, and
+- retained raw payloads (`retain_raw=True`); otherwise the outcome reports
+  `unavailable`, and unknown IDs report `missing`.
+
+Without a processor the controls are hidden and the endpoint answers 501.
+
 ## Authentication
 
 API clients send `Authorization: Bearer <token>`. Browsers navigating links
@@ -60,3 +72,48 @@ history and server logs — prefer header auth, short-lived tokens, and HTTPS.
 
 Raw payload reveal additionally requires an `owner`/`operator` role, and
 payloads are secret-redacted regardless of role.
+
+## Browser login
+
+`/ui/login` accepts an API token and sets an `HttpOnly`, `SameSite=Lax`
+session cookie (12h, in-memory server store), so navigation works without
+tokens in URLs. `/ui/logout` clears it. Production deployments should use
+persistent sessions plus CSRF protection; the reference store is a starting
+point, not a finished auth system.
+
+## Auto-persistence
+
+Pass repositories to make the admin reflect live traffic without manual
+wiring:
+
+```python
+from whatsloon.messages.service import MessageService
+
+service = MessageService(
+    adapter,
+    transport,
+    phone_number_id,
+    message_store=messages,
+    conversation_store=conversations,
+    tenant_id="t-1",
+)
+```
+
+Outbound sends then persist message + conversation records (storage
+failures log a warning; the send result stays authoritative). Likewise,
+`WebhookProcessor(..., message_store=..., conversation_store=...)`
+materializes inbound messages at receipt time.
+
+## Resource managers
+
+Pass a v3 client to unlock management pages (hidden otherwise):
+
+```python
+app = create_app(store, auth, processor=processor, wa=whatsapp_client)
+```
+
+- `/ui/templates` — list/create per WABA (names are lowercase + underscores)
+- `/ui/media` — multipart upload returning the media ID
+- `/ui/groups` — list groups with invite links
+
+Meta API failures render as error pages, never tracebacks.

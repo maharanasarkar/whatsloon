@@ -140,3 +140,47 @@ async def test_async_service_shares_serialization():
         )
     assert result.message_id == "wamid.async-svc"
     assert seen[0].json_body["template"]["name"] == "t"
+
+
+def test_outbound_persist_records_message_and_conversation():
+    """Opt-in stores persist outbound sends with linked conversations."""
+    from whatsloon.messages.service import MessageService
+    from whatsloon.persistence.repositories import (
+        InMemoryConversationRepository,
+        InMemoryMessageRepository,
+    )
+
+    fake = FakeSyncTransport()
+    messages = InMemoryMessageRepository()
+    conversations = InMemoryConversationRepository()
+    client, _ = _client()
+    service = MessageService(
+        client.adapter,
+        fake,
+        "123",
+        message_store=messages,
+        conversation_store=conversations,
+        tenant_id="t-1",
+    )
+    result = service.send_text(to="919876543210", body="Persist me")
+    assert result.message_id == "wamid.svc-1"
+    from whatsloon.persistence.base import MessageFilter
+
+    stored = messages.search(MessageFilter(tenant_id="t-1"))
+    assert len(stored) == 1
+    assert stored[0].direction.value == "outbound"
+    assert stored[0].content_text == "Persist me"
+    assert stored[0].external_message_id == "wamid.svc-1"
+    convos = conversations.list("t-1")
+    assert len(convos) == 1
+    assert stored[0].conversation_id == convos[0].id
+
+
+def test_outbound_without_stores_sends_normally():
+    """Stores default off; sends work without persistence."""
+    from whatsloon.messages.service import MessageService
+
+    fake = FakeSyncTransport()
+    client, _ = _client()
+    service = MessageService(client.adapter, fake, "123")
+    assert service.send_text(to="919876543210", body="Hi").message_id == "wamid.svc-1"
