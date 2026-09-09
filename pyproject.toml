@@ -116,7 +116,7 @@ source = ["whatsloon"]
 branch = true
 
 [tool.coverage.report]
-fail_under = 70
+fail_under = 75
 show_missing = true
 skip_covered = false
 
@@ -151,7 +151,7 @@ show_error_codes = true
 exclude = ["tests/", "docs/", "examples/"]
 
 [tool.interrogate]
-fail-under = 90
+fail-under = 99
 ignore-magic = true
 ignore-module = true
 ignore-private = true
