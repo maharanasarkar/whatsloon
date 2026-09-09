@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Error {{ status }} — whatsloon admin{% endblock %}
+{% block content %}
+<div class="error-box" role="alert">
+  <h1>{{ status }} — {{ heading }}</h1>
+  <p>{{ message }}</p>
+  <p><a href="{{ root }}/ui/dashboard?tenant_id={{ tenant_id }}&amp;token={{ token }}">Back to dashboard</a></p>
+</div>
+{% endblock %}

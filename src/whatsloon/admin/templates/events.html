@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Events — whatsloon admin{% endblock %}
+{% block content %}
+<h1>Webhook events</h1>
+<form class="filters" method="get" action="{{ root }}/ui/events"
+      hx-get="{{ root }}/ui/partials/events?tenant_id={{ tenant_id }}&amp;token={{ token }}"
+      hx-target="#event-rows" hx-swap="innerHTML" hx-trigger="submit">
+  <input type="hidden" name="tenant_id" value="{{ tenant_id }}">
+  <input type="hidden" name="token" value="{{ token }}">
+  <label>Processing status
+    <select name="processing_status">
+      <option value="">Any</option>
+      {% for s in ["received", "processed", "failed", "retrying"] %}
+      <option value="{{ s }}"{% if processing_status == s %} selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Apply</button>
+</form>
+{% if items %}
+<table>
+  <thead><tr><th scope="col">ID</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Retries</th><th scope="col">Received</th></tr></thead>
+  <tbody id="event-rows">
+    {% include "_event_rows.html" %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty" role="status">No events match these filters.</div>
+{% endif %}
+{% endblock %}

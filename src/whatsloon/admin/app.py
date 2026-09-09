@@ -50,6 +50,14 @@ def create_app(store: RepositoryBundle, auth: AdminAuth) -> FastAPI:
         raise RuntimeError("Admin console requires an AdminAuth backend; refusing no-auth mode.")
     app = FastAPI(title="whatsloon admin", version="3")
 
+    try:
+        from whatsloon.admin.ui import create_ui_router
+
+        app.include_router(create_ui_router(store, auth))
+    except ImportError:
+        # jinja2 missing: HTML pages skipped, JSON API still served.
+        pass
+
     def current_user(authorization: Optional[str] = Header(default=None)) -> AdminUser:
         """Resolve the bearer token to a principal.
 

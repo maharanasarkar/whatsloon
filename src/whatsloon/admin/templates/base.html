@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}whatsloon admin{% endblock %}</title>
+  <link rel="stylesheet" href="{{ root }}/ui/static/admin.css">
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">Skip to content</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ root }}/ui/dashboard?tenant_id={{ tenant_id }}&amp;token={{ token }}">whatsloon admin</a>
+      <nav class="nav" aria-label="Primary">
+        <a href="{{ root }}/ui/dashboard?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'dashboard' %} aria-current="page"{% endif %}>Dashboard</a>
+        <a href="{{ root }}/ui/conversations?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'conversations' %} aria-current="page"{% endif %}>Conversations</a>
+        <a href="{{ root }}/ui/messages?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'messages' %} aria-current="page"{% endif %}>Messages</a>
+        <a href="{{ root }}/ui/events?tenant_id={{ tenant_id }}&amp;token={{ token }}"{% if active == 'events' %} aria-current="page"{% endif %}>Events</a>
+      </nav>
+      <form class="tenant-form" method="get" action="{{ root }}/ui/dashboard">
+        <label>Tenant
+          <input type="text" name="tenant_id" value="{{ tenant_id }}" size="12" autocomplete="off">
+        </label>
+        <input type="hidden" name="token" value="{{ token }}">
+        <button type="submit">Switch</button>
+      </form>
+    </div>
+  </header>
+  <main id="content">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -85,6 +85,7 @@ admin = [
   "whatsloon[sql]",
   "fastapi>=0.110",
   "uvicorn>=0.29",
+  "jinja2>=3.1",
 ]
 flows = [
   "cryptography>=42",
@@ -104,7 +105,7 @@ include = ["whatsloon*"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-whatsloon = ["py.typed"]
+whatsloon = ["py.typed", "admin/templates/*.html", "admin/static/*.css"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
