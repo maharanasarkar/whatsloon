@@ -13,6 +13,11 @@ Groups are invite-only: members join via the invite link (there is no
 add-participant endpoint); the business approves or rejects requests.
 Group messaging reuses `wa.messages` with `recipient_type="group"`:
 
+> Eligibility: numbers without Groups access get `ValidationAPIError`
+> `(#131215) "This phone number is not eligible to access Groups APIs"`.
+> This is a number capability, not a payload problem — verify eligibility
+> in the Meta dashboard before debugging the request.
+
 ```python
 from whatsloon.messages.models import OutboundMessage, TextMessage
 

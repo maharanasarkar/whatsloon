@@ -29,6 +29,15 @@ Replies attach to any content:
 wa.messages.send_text(to="919876543210", body="Got it!", reply_to="wamid....")
 ```
 
+## Delivery windows (live-tested)
+
+Meta accepts free-text sends with a `wamid` even when they will not be
+delivered: business-initiated free text only reaches users inside the
+24-hour customer-service window. Outside it, send a template first (the
+template itself opens the window). A returned message ID therefore means
+Meta accepted the payload, not that the handset received it — confirm
+delivery via status webhooks.
+
 Async mirrors sync through shared builders:
 
 ```python
