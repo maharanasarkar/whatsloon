@@ -46,7 +46,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - run: pip install -U pip
-      - run: pip install .[test] fastapi "sqlalchemy>=2.0" "cryptography>=42" "jinja2>=3.1"
+      - run: pip install .[test] fastapi "sqlalchemy>=2.0" "cryptography>=42" "jinja2>=3.1" "python-multipart>=0.0.18"
       - run: pytest --cov --cov-report=xml
         env:
           WHATSLOON_TEST_API_VERSION: ${{ matrix.api-version }}

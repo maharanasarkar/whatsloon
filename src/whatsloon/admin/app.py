@@ -33,12 +33,19 @@ class RepositoryBundle:
     events: Any
 
 
-def create_app(store: RepositoryBundle, auth: AdminAuth) -> FastAPI:
+def create_app(
+    store: RepositoryBundle,
+    auth: AdminAuth,
+    processor: Optional[Any] = None,
+    wa: Optional[Any] = None,
+) -> FastAPI:
     """Create the admin FastAPI application.
 
     Args:
         store: Repository bundle for read views.
         auth: Pluggable authentication backend.
+        processor: Optional webhook processor enabling event retries.
+        wa: Optional v3 client enabling resource managers.
 
     Returns:
         Configured FastAPI application.
@@ -53,7 +60,7 @@ def create_app(store: RepositoryBundle, auth: AdminAuth) -> FastAPI:
     try:
         from whatsloon.admin.ui import create_ui_router
 
-        app.include_router(create_ui_router(store, auth))
+        app.include_router(create_ui_router(store, auth, processor=processor, wa=wa))
     except ImportError:
         # jinja2 missing: HTML pages skipped, JSON API still served.
         pass
@@ -209,6 +216,39 @@ def create_app(store: RepositoryBundle, auth: AdminAuth) -> FastAPI:
             for e in store.events.search(query)
         ]
         return JSONResponse({"items": items})
+
+    @app.post("/events/{event_id}/retry")
+    def retry_event(
+        event_id: str,
+        tenant_id: str,
+        user: AdminUser = Depends(current_user),
+    ) -> JSONResponse:
+        """Re-dispatch a stored event from its retained raw payload.
+
+        Args:
+            event_id: Stored event identifier.
+            tenant_id: Tenant scope.
+            user: Authenticated principal.
+
+        Returns:
+            Retry outcome, 404 for unknown IDs, or 501 without a processor.
+        """
+        denied = views.check_access(user, tenant_id)
+        if denied is not None:
+            return JSONResponse(denied, status_code=denied["status"])
+        if processor is None:
+            return JSONResponse({"error": "retry unavailable: no processor wired"}, status_code=501)
+        result = processor.retry_event(tenant_id, event_id)
+        status = 404 if result.outcome == "missing" else 200
+        return JSONResponse(
+            {
+                "event_id": result.event_id,
+                "event_type": result.event_type,
+                "outcome": result.outcome,
+                "detail": result.detail,
+            },
+            status_code=status,
+        )
 
     return app
 

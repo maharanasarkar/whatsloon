@@ -215,3 +215,158 @@ def test_content_search_and_dates():
     )
     fragment = client.get("/ui/partials/messages" + _q("viewer-token") + "&q=reply").text
     assert "Reply here" in fragment and "<html" not in fragment
+
+
+def _retry_client():
+    """Build a UI client wired to a processor with a failed event.
+
+    Returns:
+        Test client with a retained failed event.
+    """
+    from whatsloon.webhooks.events import WebhookMessageReceived
+    from whatsloon.webhooks.processor import WebhookProcessor
+    from whatsloon.webhooks.router import EventRouter
+
+    store = _store()
+    router = EventRouter()
+    router.register("message.received", lambda event: None)
+    processor = WebhookProcessor(
+        router=router, events=store.events, tenant_resolver=lambda e: "t-1", retain_raw=True
+    )
+    record = WebhookEvent(
+        id="e-ui-retry",
+        event_hash="h-ui-retry",
+        tenant_id="t-1",
+        event_type="message.received",
+        processing_status=ProcessingStatus.FAILED,
+        has_raw_payload=True,
+    )
+    store.events.record(record, WebhookMessageReceived(message_id="w-ui").model_dump())
+    mapping = {"owner-token": AdminUser(username="owner", tenant_id="*", roles=["owner"])}
+    return TestClient(create_app(store, StaticTokenAuth(mapping), processor=processor))
+
+
+def test_retry_button_and_row_update():
+    """Failed rows offer retry; posting updates the row in place."""
+    client = _retry_client()
+    page = client.get("/ui/events" + _q("owner-token")).text
+    assert "Retry" in page
+    assert "Show failed only" in page
+    row = client.post("/ui/events/e-ui-retry/retry?tenant_id=t-1&token=owner-token")
+    assert row.status_code == 200
+    assert "processed" in row.text
+    assert 'id="event-e-ui-retry"' in row.text
+    assert client.post("/ui/events/nope/retry?tenant_id=t-1&token=owner-token").status_code == 404
+
+
+def test_retry_hidden_without_processor():
+    """Unwired consoles show no retry controls."""
+    assert "Retry" not in _client().get("/ui/events" + _q("owner-token")).text
+
+
+def test_login_logout_session_flow():
+    """Token login sets a session cookie; logout clears it."""
+    client = _client()
+    form = client.get("/ui/login")
+    assert form.status_code == 200
+    assert 'name="api_token"' in form.text
+    denied = client.post("/ui/login", data={"api_token": "nope"})
+    assert denied.status_code == 401
+    assert "Unknown token" in denied.text
+    logged = client.post("/ui/login", data={"api_token": "viewer-token"}, follow_redirects=False)
+    assert logged.status_code == 303
+    assert "wa_session=" in logged.headers.get("set-cookie", "")
+    assert "httponly" in logged.headers.get("set-cookie", "").lower()
+    dashboard = client.get("/ui/dashboard?tenant_id=t-1")
+    assert dashboard.status_code == 200
+    assert "viewer" in dashboard.text
+    logout = client.post("/ui/logout", follow_redirects=False)
+    assert logout.status_code == 303
+    assert client.get("/ui/dashboard?tenant_id=t-1").status_code == 401
+
+
+def _managed_client():
+    """Build a UI client wired to stubbed Meta services.
+
+    Returns:
+        Test client with canned managers.
+    """
+    from types import SimpleNamespace
+
+    from whatsloon.templates.models import TemplateInfo
+
+    templates = SimpleNamespace(
+        list_templates=lambda waba_id: [
+            TemplateInfo(id="t-1", name="hello", status="APPROVED", language="en_US")
+        ],
+        create_template=lambda waba_id, spec: TemplateInfo(id="t-2", name=spec.name),
+        calls=[],
+    )
+    orig_create = templates.create_template
+
+    def _create(waba_id, spec):
+        templates.calls.append((waba_id, spec.name))
+        return orig_create(waba_id, spec)
+
+    templates.create_template = _create
+    media = SimpleNamespace(
+        upload_bytes=lambda content, mime, filename="u": SimpleNamespace(
+            media_id="mid-1", filename=filename
+        )
+    )
+    groups = SimpleNamespace(
+        list_groups=lambda: [SimpleNamespace(id="g-1", subject="Team", invite_link="https://x")]
+    )
+    wa = SimpleNamespace(templates=templates, media=media, groups=groups)
+    mapping = {
+        "owner-token": AdminUser(username="owner", tenant_id="*", roles=["owner"]),
+        "viewer-token": AdminUser(username="viewer", tenant_id="t-1", roles=["viewer"]),
+    }
+    return TestClient(create_app(_store(), StaticTokenAuth(mapping), wa=wa))
+
+
+def test_managers_hidden_without_client():
+    """Manager navigation hides when no client is wired."""
+    assert "Templates" not in _client().get("/ui/dashboard" + _q("owner-token")).text
+
+
+def test_template_list_and_create():
+    """Template pages list and create through the wired client."""
+    client = _managed_client()
+    page = client.get("/ui/templates" + _q("owner-token") + "&waba_id=w-1").text
+    assert "hello" in page
+    assert "Templates" in page
+    created = client.post(
+        "/ui/templates/create",
+        data={
+            "tenant_id": "t-1",
+            "token": "owner-token",
+            "waba_id": "w-1",
+            "name": "new_tpl",
+            "language": "en_US",
+            "category": "UTILITY",
+        },
+        follow_redirects=False,
+    )
+    assert created.status_code == 303
+    assert created.headers["location"].startswith("./templates?")
+    assert "\r" not in created.headers["location"] and "\n" not in created.headers["location"]
+
+
+def test_media_upload_and_groups_list():
+    """Media uploads return IDs; groups list renders."""
+    client = _managed_client()
+    assert "Upload" in client.get("/ui/media" + _q("owner-token")).text
+    uploaded = client.post(
+        "/ui/media",
+        data={"tenant_id": "t-1", "token": "owner-token", "mime_type": "image/jpeg"},
+        files={"file": ("a.jpg", b"bytes", "image/jpeg")},
+    )
+    assert "mid-1" in uploaded.text
+    assert "Team" in client.get("/ui/groups" + _q("owner-token")).text
+
+
+def test_manager_forbidden_for_other_tenant():
+    """Manager routes enforce tenant scope."""
+    client = _managed_client()
+    assert client.get("/ui/templates" + _q("viewer-token", "t-2")).status_code == 403

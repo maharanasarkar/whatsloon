@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Media — whatsloon admin{% endblock %}
+{% block content %}
+<h1>Media upload</h1>
+<form method="post" action="{{ root }}/ui/media" enctype="multipart/form-data" class="stacked">
+  <input type="hidden" name="tenant_id" value="{{ tenant_id }}">
+  <input type="hidden" name="token" value="{{ token }}">
+  <label>File
+    <input type="file" name="file" required>
+  </label>
+  <label>MIME type
+    <input type="text" name="mime_type" value="image/jpeg" required autocomplete="off">
+  </label>
+  <button type="submit" class="primary">Upload</button>
+</form>
+{% if result %}
+<div class="card">
+  <div class="label">Uploaded media ID</div>
+  <div class="value" style="font-size:16px"><code>{{ result.media_id }}</code></div>
+  <div class="label">{{ result.filename }}</div>
+</div>
+{% endif %}
+{% endblock %}

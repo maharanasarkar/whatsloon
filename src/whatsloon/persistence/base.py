@@ -201,6 +201,33 @@ class EventRepository(Protocol):
         """
         ...  # pragma: no cover
 
+    def get(self, tenant_id: str, event_id: str) -> Optional[WebhookEvent]:
+        """Fetch an event by ID within a tenant.
+
+        Args:
+            tenant_id: Owning tenant.
+            event_id: Local identifier.
+
+        Returns:
+            Record or None.
+        """
+        ...  # pragma: no cover
+
+    def raw_payload(self, tenant_id: str, event_id: str) -> Optional[dict]:
+        """Fetch a retained raw payload for retry support.
+
+        Stores without raw retention return None; retries of such
+        events report ``unavailable`` instead of failing.
+
+        Args:
+            tenant_id: Owning tenant.
+            event_id: Local identifier.
+
+        Returns:
+            Raw payload or None.
+        """
+        ...  # pragma: no cover
+
     def search(self, query: EventFilter) -> list[WebhookEvent]:
         """Search events honoring tenant isolation.
 

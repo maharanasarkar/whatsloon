@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Log in — whatsloon admin{% endblock %}
+{% block content %}
+<h1>Log in</h1>
+<p>Enter an API token to start a browser session. Tokens are never stored in the URL after login.</p>
+{% if error %}
+<div class="error-box" role="alert">{{ error }}</div>
+{% endif %}
+<form method="post" action="{{ root }}/ui/login" class="stacked">
+  <label>API token
+    <input type="password" name="api_token" autocomplete="off" required>
+  </label>
+  <button type="submit" class="primary">Log in</button>
+</form>
+{% endblock %}
