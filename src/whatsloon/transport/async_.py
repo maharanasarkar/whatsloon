@@ -39,6 +39,7 @@ class AsyncTransport(BaseTransport):
         """
         super().__init__(**kwargs)
         self._client: Optional[httpx.AsyncClient] = None
+        self._lock = asyncio.Lock()
 
     async def __aenter__(self) -> AsyncTransport:
         """Enter the transport context, creating the pooled client.
@@ -46,13 +47,16 @@ class AsyncTransport(BaseTransport):
         Returns:
             This transport.
         """
-        timeout = httpx.Timeout(
-            connect=self.timeout.connect,
-            read=self.timeout.read,
-            write=self.timeout.write,
-            pool=self.timeout.pool,
-        )
-        self._client = httpx.AsyncClient(timeout=timeout)
+        async with self._lock:
+            timeout = httpx.Timeout(
+                connect=self.timeout.connect,
+                read=self.timeout.read,
+                write=self.timeout.write,
+                pool=self.timeout.pool,
+            )
+            if self._client is not None:
+                await self._client.aclose()
+            self._client = httpx.AsyncClient(timeout=timeout)
         return self
 
     async def __aexit__(self, *exc_info: Any) -> None:
@@ -64,9 +68,10 @@ class AsyncTransport(BaseTransport):
 
         Safe to call multiple times.
         """
-        if self._client is not None:
-            await self._client.aclose()
-            self._client = None
+        async with self._lock:
+            client, self._client = self._client, None
+        if client is not None:
+            await client.aclose()
 
     def _require_client(self) -> httpx.AsyncClient:
         """Return the active client or raise a configuration error.
@@ -150,6 +155,9 @@ class AsyncTransport(BaseTransport):
         headers = self._headers(request.headers)
         if request.files is not None:
             headers.pop("Content-Type", None)
+        if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+            headers.setdefault("Idempotency-Key", request.idempotency_key)
+        self._notify_before(request)
         logger.debug(
             "%s %s headers=%s correlation_id=%s",
             request.method,
@@ -169,7 +177,9 @@ class AsyncTransport(BaseTransport):
                 timeout=timeout,
             )
         except httpx.HTTPError as exc:
-            raise map_httpx_error(exc) from exc
+            mapped = map_httpx_error(exc)
+            self._notify_error(request, mapped)
+            raise mapped from exc
         try:
             data = raw.json() if raw.content else {}
         except ValueError:
@@ -181,6 +191,7 @@ class AsyncTransport(BaseTransport):
             headers=dict(raw.headers),
             correlation_id=request.correlation_id,
         )
+        self._notify_after(request, response)
         if raw.status_code >= 400:
             raise translate_error(
                 status_code=raw.status_code,

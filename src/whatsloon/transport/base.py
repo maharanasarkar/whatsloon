@@ -190,6 +190,7 @@ class BaseTransport(ABC):
         timeout: Any,
         retry: RetryConfig,
         user_agent: str = "whatsloon/3",
+        middleware: Optional[list[Any]] = None,
     ) -> None:
         """Initialize shared transport state.
 
@@ -199,12 +200,45 @@ class BaseTransport(ABC):
             timeout: Timeout budget.
             retry: Retry policy.
             user_agent: SDK user-agent header value.
+            middleware: Observers invoked per attempt (default none).
         """
         self.base_url = base_url.rstrip("/")
         self._access_token = access_token
         self.timeout = timeout
         self.retry = retry
         self.user_agent = user_agent
+        self.middleware: list[Any] = list(middleware or [])
+
+    def _notify_before(self, request: Request) -> None:
+        """Invoke before_send on all middleware.
+
+        Args:
+            request: Outbound request.
+        """
+        for observer in self.middleware:
+            observer.before_send(request)
+
+    def _notify_after(self, request: Request, response: Response) -> None:
+        """Invoke after_send on all middleware.
+
+        Args:
+            request: Outbound request.
+            response: Normalized response.
+        """
+        for observer in self.middleware:
+            observer.after_send(request, response)
+
+    def _notify_error(self, request: Request, error: Exception) -> None:
+        """Invoke record_error where supported.
+
+        Args:
+            request: Outbound request.
+            error: The failure.
+        """
+        for observer in self.middleware:
+            recorder = getattr(observer, "record_error", None)
+            if callable(recorder):
+                recorder(request, error)
 
     def _headers(self, extra: Optional[dict[str, str]] = None) -> dict[str, str]:
         """Build outgoing headers with auth.

@@ -86,3 +86,122 @@ def test_connection_failure_maps_to_typed_error(monkeypatch):
 def test_headers_redacted_for_logging():
     """Authorization headers never appear in log records."""
     assert redact_headers({"Authorization": "Bearer secret"}) == {"Authorization": "Bearer ***"}
+
+
+class _Recorder:
+    """Test middleware recording hook invocations."""
+
+    def __init__(self) -> None:
+        """Initialize empty records."""
+        self.before: list[str] = []
+        self.after: list[int] = []
+        self.errors: list[str] = []
+
+    def before_send(self, request) -> None:
+        """Record a before hook.
+
+        Args:
+            request: Outbound request.
+        """
+        self.before.append(request.correlation_id)
+
+    def after_send(self, request, response) -> None:
+        """Record an after hook.
+
+        Args:
+            request: Outbound request.
+            response: Normalized response.
+        """
+        self.after.append(response.status_code)
+
+    def record_error(self, request, error) -> None:
+        """Record an error hook.
+
+        Args:
+            request: Outbound request.
+            error: The failure.
+        """
+        self.errors.append(type(error).__name__)
+
+
+def test_middleware_called_per_attempt(monkeypatch):
+    """Middleware observes every attempt including retries."""
+    calls = {"n": 0}
+
+    def handler(method, url, json):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return _ok_response({"error": {"message": "boom"}}, status=500)
+        return _ok_response({"messages": [{"id": "w-2"}]})
+
+    recorder = _Recorder()
+    transport = _transport(monkeypatch, handler, max_attempts=2)
+    transport.middleware.append(recorder)
+    transport.send(Request(method="POST", path="/x", json_body={}))
+    assert len(recorder.before) == 2
+    assert recorder.after == [500, 200]
+
+
+def test_middleware_record_error_on_transport_failure(monkeypatch):
+    """Transport failures reach record_error hooks."""
+
+    def handler(method, url, json):
+        raise httpx.ConnectError("dns down")
+
+    recorder = _Recorder()
+    transport = _transport(monkeypatch, handler)
+    transport.middleware.append(recorder)
+    with pytest.raises(ConnectError):
+        transport.send(Request(method="POST", path="/x", json_body={}))
+    assert recorder.errors == ["ConnectError"]
+    assert recorder.after == []
+
+
+def test_idempotency_key_sent_on_posts(monkeypatch):
+    """POSTs carry the request idempotency key; GETs do not."""
+    seen = {}
+
+    def fake_request(self, method, url, **kwargs):
+        seen[method] = kwargs["headers"]
+        return _ok_response({})
+
+    monkeypatch.setattr(httpx.Client, "request", fake_request)
+    transport = SyncTransport(
+        base_url="https://graph.facebook.com/v26.0",
+        access_token="secret",
+        timeout=TimeoutConfig(),
+        retry=RetryConfig(max_attempts=1, jitter=False),
+    )
+    request = Request(method="POST", path="/x", json_body={})
+    transport.send(request)
+    assert seen["POST"]["Idempotency-Key"] == request.idempotency_key
+    transport.send(Request(method="GET", path="/x"))
+    assert "Idempotency-Key" not in seen["GET"]
+
+
+def test_concurrent_first_send_creates_one_client(monkeypatch):
+    """Concurrent first sends share a single pooled client."""
+    import threading
+
+    created = []
+
+    real_client = httpx.Client
+
+    def counting_client(*args, **kwargs):
+        created.append(1)
+        return real_client(*args, **kwargs)
+
+    monkeypatch.setattr(httpx, "Client", counting_client)
+    transport = SyncTransport(
+        base_url="https://graph.facebook.com/v26.0",
+        access_token="secret",
+        timeout=TimeoutConfig(),
+        retry=RetryConfig(max_attempts=1, jitter=False),
+    )
+    threads = [threading.Thread(target=lambda: transport.client) for _ in range(8)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert len(created) == 1
+    transport.close()
