@@ -111,3 +111,21 @@ def test_filter_predicates():
     assert filt.matches(WebhookMessageReceived(sender="919")) is True
     assert filt.matches(WebhookMessageReceived(sender="other")) is False
     assert filt.matches(WebhookMessageStatus()) is False
+
+
+def test_oversized_bodies_rejected_before_parsing():
+    """Bodies over the cap raise without JSON parsing."""
+    with pytest.raises(InvalidPayloadError):
+        parse_body(b"x" * 32, max_bytes=16)
+    assert parse_body(_load("message_received.json"), max_bytes=1_000_000)
+
+
+def test_stale_events_demote_to_unknown():
+    """Opt-in freshness demotes stale events, preserving content."""
+    fresh = parse_body(_load("message_received.json"), max_age_seconds=10**10)
+    assert fresh[0].event_type == "message.received"
+    stale = parse_body(_load("message_received.json"), max_age_seconds=0)
+    assert len(stale) == 1
+    assert stale[0].event_type == "unknown"
+    assert stale[0].reason == "stale"
+    assert stale[0].raw["message_id"] == "wamid.fixture-msg-1"

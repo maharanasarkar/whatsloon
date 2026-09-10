@@ -8,7 +8,6 @@ safe; handler failures persist as FAILED without losing sibling events.
 
 from __future__ import annotations
 
-import asyncio
 import inspect
 import logging
 import uuid
@@ -51,25 +50,12 @@ def default_tenant_resolver(event: NormalizedEvent) -> str:
     return phone_id or "default"
 
 
-def _run_awaitable_sync(awaitable: Any) -> Any:
-    """Drive a coroutine handler from the sync pipeline.
+class AsyncHandlerInSyncPipeline(TypeError):
+    """Raised when a coroutine handler meets the sync pipeline.
 
-    Args:
-        awaitable: Coroutine returned by a handler.
-
-    Returns:
-        Handler result.
-
-    Raises:
-        RuntimeError: If called inside a running event loop; use
-            :meth:`WebhookProcessor.aprocess` instead.
+    Use :meth:`WebhookProcessor.aprocess` for coroutine handlers; the sync
+    :meth:`WebhookProcessor.process` only runs synchronous handlers.
     """
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(awaitable)
-    awaitable.close()
-    raise RuntimeError("Async handler in sync process(); use aprocess() instead.")
 
 
 @dataclass
@@ -130,6 +116,8 @@ class WebhookProcessor:
         queue: Optional enqueue hook; when set, handling is deferred.
         message_store: Optional repository receiving inbound records.
         conversation_store: Optional repository receiving conversation records.
+        max_bytes: Body size cap against memory-DoS deliveries.
+        max_age_seconds: Optional freshness window; None disables.
     """
 
     router: EventRouter
@@ -140,6 +128,8 @@ class WebhookProcessor:
     queue: Optional[EnqueueHook] = None
     message_store: Any = None
     conversation_store: Any = None
+    max_bytes: int = 1_000_000
+    max_age_seconds: Optional[float] = None
 
     def process(
         self, raw_body: bytes, signature_header: Optional[str], *, app_secret: Any
@@ -161,7 +151,12 @@ class WebhookProcessor:
         """
         verify_signature(app_secret, raw_body, signature_header)
         results: list[ProcessResult] = []
-        for event in parse_body(raw_body, api_version=self.api_version):
+        for event in parse_body(
+            raw_body,
+            api_version=self.api_version,
+            max_bytes=self.max_bytes,
+            max_age_seconds=self.max_age_seconds,
+        ):
             results.append(self._handle_one(event))
         return results
 
@@ -185,7 +180,12 @@ class WebhookProcessor:
         """
         verify_signature(app_secret, raw_body, signature_header)
         results: list[ProcessResult] = []
-        for event in parse_body(raw_body, api_version=self.api_version):
+        for event in parse_body(
+            raw_body,
+            api_version=self.api_version,
+            max_bytes=self.max_bytes,
+            max_age_seconds=self.max_age_seconds,
+        ):
             results.append(await self._ahandle_one(event))
         return results
 
@@ -302,7 +302,12 @@ class WebhookProcessor:
         try:
             outcome = handler(event)
             if inspect.isawaitable(outcome):
-                outcome = _run_awaitable_sync(outcome)
+                closer = getattr(outcome, "close", None)
+                if callable(closer):
+                    closer()
+                raise AsyncHandlerInSyncPipeline(
+                    "Coroutine handler in sync process(); use aprocess() instead."
+                )
             self._finish(record, status=ProcessingStatus.PROCESSED)
             return ProcessResult(record.id, event.event_type, "handled")
         except Exception as exc:
@@ -425,6 +430,7 @@ class WebhookProcessor:
 
 
 __all__ = [
+    "AsyncHandlerInSyncPipeline",
     "EnqueueHook",
     "ProcessResult",
     "TenantResolver",

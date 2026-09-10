@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from whatsloon.exceptions import InvalidSignatureError
+from whatsloon.exceptions import InvalidPayloadError, InvalidSignatureError
 from whatsloon.persistence.base import EventFilter
 from whatsloon.persistence.models import ProcessingStatus
 from whatsloon.persistence.repositories import InMemoryEventRepository
@@ -218,3 +218,29 @@ async def test_async_retry():
     result = await processor.aretry_event("t-1", stored.event_id)
     assert result.outcome == "handled"
     assert seen == ["wamid.fixture-msg-1", "wamid.fixture-msg-1"]
+
+
+def test_async_handler_in_sync_pipeline_fails_fast():
+    """Coroutine handlers in process() fail with a clear contract error."""
+    from whatsloon.webhooks.processor import AsyncHandlerInSyncPipeline
+
+    async def handler(event):
+        return None
+
+    router = EventRouter()
+    events = InMemoryEventRepository()
+    router.register("message.received", handler)
+    processor = WebhookProcessor(router=router, events=events, tenant_resolver=lambda e: "t-1")
+    outcome = processor.process(_body(), _signed(_body()), app_secret=SECRET)[0]
+    assert outcome.outcome == "failed"
+    assert "aprocess" in outcome.detail
+
+
+def test_processor_body_cap_and_freshness_passthrough():
+    """Processor forwards parse knobs to the parser."""
+    router = EventRouter()
+    events = InMemoryEventRepository()
+    router.register("message.received", lambda event: None)
+    capped = WebhookProcessor(router=router, events=events, max_bytes=16)
+    with pytest.raises(InvalidPayloadError):
+        capped.process(_body(), _signed(_body()), app_secret=SECRET)

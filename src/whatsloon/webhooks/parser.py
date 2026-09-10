@@ -18,29 +18,78 @@ from whatsloon.webhooks.events import (
     WebhookMessageStatus,
 )
 
+MAX_BODY_BYTES: int = 1_000_000
+"""Maximum accepted webhook body size (1 MiB) before JSON parsing."""
 
-def parse_body(raw_body: bytes, *, api_version: str = "") -> list[NormalizedEvent]:
+
+def parse_body(
+    raw_body: bytes,
+    *,
+    api_version: str = "",
+    max_bytes: int = MAX_BODY_BYTES,
+    max_age_seconds: Optional[float] = None,
+) -> list[NormalizedEvent]:
     """Parse raw webhook bytes into normalized events.
 
     Args:
         raw_body: Raw request bytes exactly as received.
         api_version: Adapter version used for normalization.
+        max_bytes: Body size cap against memory-DoS deliveries.
+        max_age_seconds: Optional freshness window; events older than this
+            become ``UnknownEvent`` with reason ``stale``. Off by default
+            because Meta legitimately redelivers; enable (e.g. 86400) where
+            replay protection matters more than late redelivery.
 
     Returns:
         Normalized events, one per message/status plus unknowns.
 
     Raises:
-        InvalidPayloadError: If the body is not valid JSON or not an object.
+        InvalidPayloadError: If the body is oversized, not valid JSON,
+            not an object, or unparseably nested.
     """
     from whatsloon.exceptions import InvalidPayloadError
 
+    if len(raw_body) > max_bytes:
+        raise InvalidPayloadError(f"Webhook body exceeds {max_bytes} bytes.")
     try:
         payload = json.loads(raw_body.decode("utf-8"))
     except (UnicodeDecodeError, ValueError) as exc:
         raise InvalidPayloadError("Webhook body is not valid JSON.") from exc
+    except RecursionError as exc:
+        raise InvalidPayloadError("Webhook body nesting too deep.") from exc
     if not isinstance(payload, dict):
         raise InvalidPayloadError("Webhook body must be a JSON object.")
-    return parse_envelope(payload, api_version=api_version)
+    events = parse_envelope(payload, api_version=api_version)
+    if max_age_seconds is not None:
+        events = [_apply_freshness(event, max_age_seconds, api_version) for event in events]
+    return events
+
+
+def _apply_freshness(
+    event: NormalizedEvent, max_age_seconds: float, api_version: str
+) -> NormalizedEvent:
+    """Demote stale events to unknown, preserving their content.
+
+    Args:
+        event: Normalized event.
+        max_age_seconds: Freshness window in seconds.
+        api_version: Adapter version stamp.
+
+    Returns:
+        Original event when fresh or timestamp-less, else UnknownEvent.
+    """
+    from datetime import datetime, timezone
+
+    timestamp = getattr(event, "timestamp", "")
+    try:
+        moment = datetime.fromtimestamp(float(timestamp), tz=timezone.utc)
+    except (TypeError, ValueError):
+        return event
+    age = (datetime.now(timezone.utc) - moment).total_seconds()
+    if age <= max_age_seconds:
+        return event
+    raw = event.model_dump() if hasattr(event, "model_dump") else {}
+    return UnknownEvent(api_version=api_version, reason="stale", raw=raw)
 
 
 def parse_envelope(payload: dict[str, Any], *, api_version: str = "") -> list[NormalizedEvent]:
