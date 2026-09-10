@@ -178,6 +178,7 @@ class WhatsApp:
         retry: Optional[RetryConfig] = None,
         tenant_id: Optional[str] = None,
         transport: Optional[SyncTransport] = None,
+        middleware: Optional[list[Any]] = None,
     ) -> None:
         """Initialize the context client.
 
@@ -190,6 +191,8 @@ class WhatsApp:
             retry: Retry policy override.
             tenant_id: Application-level tenant identifier.
             transport: Injected transport (tests, custom pooling).
+            middleware: Observers for the owned transport; ignored when a
+                transport is injected (attach there instead).
 
         Raises:
             ConfigurationError: If the version or credentials are invalid.
@@ -213,6 +216,7 @@ class WhatsApp:
             timeout=self.config.timeout,
             retry=self.config.retry,
             user_agent=self.config.user_agent,
+            middleware=middleware,
         )
         self.graph = GraphClient(self.transport, phone_number_id)
         from whatsloon.business.service import BusinessService

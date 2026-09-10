@@ -44,13 +44,15 @@ submission order. Async variant: `AsyncBulkSender`.
 ## Observability (`whatsloon[observability]`)
 
 ```python
+from whatsloon import WhatsApp
 from whatsloon.observability import InMemoryMeter, NoOpTracer, ObservabilityMiddleware
 
 middleware = ObservabilityMiddleware(NoOpTracer(), InMemoryMeter())
-middleware.before_send(request)
-middleware.after_send(request, response)
+wa = WhatsApp(access_token="...", phone_number_id="...", middleware=[middleware])
 ```
 
-Swap in `OpenTelemetryTracer.create()` for real spans; core stays
+The client threads observers through its owned transport, so every attempt
+records spans, counters, and latency. Observer failures are logged, never
+raised. Swap in `OpenTelemetryTracer.create()` for real spans; core stays
 dependency-free via no-op defaults. Metrics: `whatsloon.requests.*`
 counters and duration observations — no bodies or secrets recorded.

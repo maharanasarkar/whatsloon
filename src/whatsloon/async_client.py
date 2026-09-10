@@ -83,6 +83,7 @@ class AsyncWhatsApp:
         timeout: Optional[TimeoutConfig] = None,
         retry: Optional[RetryConfig] = None,
         tenant_id: Optional[str] = None,
+        middleware: Optional[list[Any]] = None,
     ) -> None:
         """Initialize the async context client.
 
@@ -94,6 +95,7 @@ class AsyncWhatsApp:
             timeout: Timeout budget override.
             retry: Retry policy override.
             tenant_id: Application-level tenant identifier.
+            middleware: Observers for the owned transport.
 
         Raises:
             ConfigurationError: If the version or credentials are invalid.
@@ -116,6 +118,7 @@ class AsyncWhatsApp:
             timeout=self.config.timeout,
             retry=self.config.retry,
             user_agent=self.config.user_agent,
+            middleware=middleware,
         )
         self.graph = AsyncGraphClient(self.transport, phone_number_id)
         from whatsloon.business.service import AsyncBusinessService

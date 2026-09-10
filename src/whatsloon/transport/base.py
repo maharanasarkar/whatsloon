@@ -212,24 +212,39 @@ class BaseTransport(ABC):
     def _notify_before(self, request: Request) -> None:
         """Invoke before_send on all middleware.
 
+        Observer failures are logged, never raised: telemetry must not
+        fail requests.
+
         Args:
             request: Outbound request.
         """
         for observer in self.middleware:
-            observer.before_send(request)
+            try:
+                observer.before_send(request)
+            except Exception:
+                logger.debug("Transport observer before_send failed.", exc_info=True)
 
     def _notify_after(self, request: Request, response: Response) -> None:
         """Invoke after_send on all middleware.
+
+        Observer failures are logged, never raised: telemetry must not
+        fail requests.
 
         Args:
             request: Outbound request.
             response: Normalized response.
         """
         for observer in self.middleware:
-            observer.after_send(request, response)
+            try:
+                observer.after_send(request, response)
+            except Exception:
+                logger.debug("Transport observer after_send failed.", exc_info=True)
 
     def _notify_error(self, request: Request, error: Exception) -> None:
         """Invoke record_error where supported.
+
+        Observer failures are logged, never raised: telemetry must not
+        fail requests.
 
         Args:
             request: Outbound request.
@@ -237,8 +252,12 @@ class BaseTransport(ABC):
         """
         for observer in self.middleware:
             recorder = getattr(observer, "record_error", None)
-            if callable(recorder):
+            if not callable(recorder):
+                continue
+            try:
                 recorder(request, error)
+            except Exception:
+                logger.debug("Transport observer record_error failed.", exc_info=True)
 
     def _headers(self, extra: Optional[dict[str, str]] = None) -> dict[str, str]:
         """Build outgoing headers with auth.

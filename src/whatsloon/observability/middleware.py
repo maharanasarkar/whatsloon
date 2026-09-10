@@ -6,6 +6,7 @@ services that accept middleware or invoke manually around sends.
 
 from __future__ import annotations
 
+import threading
 import time
 from collections.abc import Callable
 from typing import Any as _Any
@@ -42,6 +43,7 @@ class ObservabilityMiddleware:
         self.tracer = tracer or NoOpTracer()
         self.meter = meter or NoOpMeter()
         self._clock = clock
+        self._lock = threading.Lock()
         self._started: dict[str, float] = {}
 
     def before_send(self, request: Request) -> None:
@@ -50,7 +52,8 @@ class ObservabilityMiddleware:
         Args:
             request: Outbound request.
         """
-        self._started[request.correlation_id] = self._clock()
+        with self._lock:
+            self._started[request.correlation_id] = self._clock()
         self.meter.increment("whatsloon.requests.started", 1.0, {"path": request.path})
 
     def after_send(self, request: Request, response: Response) -> None:
@@ -60,14 +63,20 @@ class ObservabilityMiddleware:
             request: Outbound request.
             response: Normalized response.
         """
-        started = self._started.pop(request.correlation_id, None)
+        with self._lock:
+            started = self._started.pop(request.correlation_id, None)
         duration = self._clock() - started if started is not None else 0.0
         outcome = "success" if response.status_code < 400 else "error"
         with self.tracer.span(
             "whatsloon.request",
-            {"http.method": request.method, "http.status_code": response.status_code},
-        ):
-            pass
+            {
+                "http.method": request.method,
+                "http.status_code": response.status_code,
+                "outcome": outcome,
+                "duration_seconds": duration,
+            },
+        ) as span:
+            span.set_attribute("correlation_id", request.correlation_id)
         self.meter.increment(
             "whatsloon.requests.completed",
             1.0,
@@ -86,7 +95,8 @@ class ObservabilityMiddleware:
             request: Outbound request.
             error: The failure.
         """
-        self._started.pop(request.correlation_id, None)
+        with self._lock:
+            self._started.pop(request.correlation_id, None)
         with self.tracer.span("whatsloon.request", {"error": type(error).__name__}) as span:
             span.record_exception(error)
         self.meter.increment(
