@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-09-10
+
 ### Added
 
 - Admin console HTML UI: server-rendered dashboard, conversations, messages, events pages (Jinja2 + HTMX, no JS build), HTMX row partials, bundled stylesheet, `docs/admin.md`.
@@ -54,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hardened `WhatsAppBaseClient` validation and normalization.
 - **Breaking:** package moved to `src/` layout; version 3.0.0. The 2.x API remains available (top-level classes plus `whatsloon.compat` with deprecation warnings); per-send `to=` replaces pinned recipients in new code.
 
-[Unreleased]: https://github.com/maharanasarkar/whatsloon/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/maharanasarkar/whatsloon/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/maharanasarkar/whatsloon/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/maharanasarkar/whatsloon/compare/v2.0.5...v3.0.0
 [2.0.5]: https://github.com/maharanasarkar/whatsloon/releases/tag/v2.0.5

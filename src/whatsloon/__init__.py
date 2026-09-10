@@ -5,7 +5,7 @@ This module exposes the main WhatsAppCloudAPIClient class, which combines all
 WhatsApp Cloud API functionalities.
 """
 
-__version__ = "3.0.0"
+__version__ = "3.1.0"
 
 from .address import AddressSender
 from .async_client import AsyncWhatsApp

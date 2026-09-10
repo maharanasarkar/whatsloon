@@ -70,13 +70,13 @@ def test_import_all_mixins():
 
 def test_version_exists():
     """
-    Test that the whatsloon package defines __version__ == "3.0.0".
+    Test that the whatsloon package defines __version__ == "3.1.0".
     Input: None
-    Output: __version__ equals "3.0.0".
+    Output: __version__ equals "3.1.0".
     """
     import whatsloon
 
-    assert whatsloon.__version__ == "3.0.0"
+    assert whatsloon.__version__ == "3.1.0"
 
 
 def test_dummy_client_integration():
