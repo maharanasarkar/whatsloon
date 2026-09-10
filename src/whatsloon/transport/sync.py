@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 import time
 from typing import Any, Optional
 
@@ -36,6 +37,7 @@ class SyncTransport(BaseTransport):
         """
         super().__init__(**kwargs)
         self._client: Optional[httpx.Client] = None
+        self._lock = threading.Lock()
 
     @property
     def client(self) -> httpx.Client:
@@ -45,13 +47,15 @@ class SyncTransport(BaseTransport):
             Shared ``httpx.Client``.
         """
         if self._client is None:
-            timeout = httpx.Timeout(
-                connect=self.timeout.connect,
-                read=self.timeout.read,
-                write=self.timeout.write,
-                pool=self.timeout.pool,
-            )
-            self._client = httpx.Client(timeout=timeout)
+            with self._lock:
+                if self._client is None:
+                    timeout = httpx.Timeout(
+                        connect=self.timeout.connect,
+                        read=self.timeout.read,
+                        write=self.timeout.write,
+                        pool=self.timeout.pool,
+                    )
+                    self._client = httpx.Client(timeout=timeout)
         return self._client
 
     def close(self) -> None:
@@ -59,9 +63,10 @@ class SyncTransport(BaseTransport):
 
         Releases underlying connections. Safe to call multiple times.
         """
-        if self._client is not None:
-            self._client.close()
-            self._client = None
+        with self._lock:
+            client, self._client = self._client, None
+        if client is not None:
+            client.close()
 
     def __enter__(self) -> SyncTransport:
         """Enter the transport context.
@@ -129,6 +134,9 @@ class SyncTransport(BaseTransport):
         headers = self._headers(request.headers)
         if request.files is not None:
             headers.pop("Content-Type", None)
+        if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+            headers.setdefault("Idempotency-Key", request.idempotency_key)
+        self._notify_before(request)
         logger.debug(
             "%s %s headers=%s correlation_id=%s",
             request.method,
@@ -148,7 +156,9 @@ class SyncTransport(BaseTransport):
                 timeout=timeout,
             )
         except httpx.HTTPError as exc:
-            raise map_httpx_error(exc) from exc
+            mapped = map_httpx_error(exc)
+            self._notify_error(request, mapped)
+            raise mapped from exc
         try:
             data = raw.json() if raw.content else {}
         except ValueError:
@@ -160,6 +170,7 @@ class SyncTransport(BaseTransport):
             headers=dict(raw.headers),
             correlation_id=request.correlation_id,
         )
+        self._notify_after(request, response)
         if raw.status_code >= 400:
             raise translate_error(
                 status_code=raw.status_code,
