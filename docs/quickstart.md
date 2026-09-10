@@ -1,5 +1,10 @@
 # Quickstart
 
+> **Legacy API (frozen).** This page covers the 2.x pinned-recipient client,
+> which is frozen: no new features, only critical fixes. New code should use
+> the [v3 client](messages.md) (`WhatsApp` with per-send `to=`), which has
+> typed models, retries, and observability.
+
 Install the package:
 
 ```bash

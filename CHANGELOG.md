@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `ContactsMessage` now requires `name.formatted_name` per Meta's schema, failing fast client-side instead of with a Meta 400.
+- The 2.x pinned-recipient API is frozen (critical fixes only); `quickstart.md`, `usage.md`, and the README point new code at the v3 client.
 
 ## [3.0.0] - 2026-09-06
 

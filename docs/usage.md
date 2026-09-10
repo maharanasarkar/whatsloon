@@ -1,5 +1,10 @@
 # Usage
 
+> **Legacy API (frozen).** This page covers the 2.x mixin-composed clients,
+> which are frozen: no new features, only critical fixes. New code should use
+> the [v3 client](messages.md) (`WhatsApp` with per-send `to=`), which has
+> typed models, retries, and observability.
+
 ## Full client
 
 Use `WhatsAppCloudAPIClient` for access to every feature:

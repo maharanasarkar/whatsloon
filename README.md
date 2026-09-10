@@ -29,6 +29,11 @@ Requires Python >=3.9.
 
 ## Quickstart
 
+> **New code should use the v3 client** (`WhatsApp` with per-send `to=`,
+> typed models, retries, observability) — see the
+> [messages guide](https://maharanasarkar.github.io/whatsloon/messages/).
+> Below is the frozen 2.x API (critical fixes only).
+
 ```python
 from whatsloon import WhatsAppCloudAPIClient
 
