@@ -72,14 +72,24 @@ def extract_trace_id(headers: dict[str, str]) -> Optional[str]:
     return None
 
 
+_RATE_LIMIT_CODES: frozenset[int] = frozenset({4, 17, 32, 368, 80007, 130429})
+"""Meta subcodes meaning throttled: app, user, page, abusive-action, WABA, throughput."""
+
+_VALIDATION_CODES: frozenset[int] = frozenset({100, 131030, 132000, 132001})
+"""Meta subcodes meaning caller-fixable payload problems: params, allowlist, templates."""
+
+
 def translate_error(
     *,
     status_code: int,
     payload: dict[str, Any],
     headers: dict[str, str],
     api_version: Optional[str] = None,
-) -> APIError:
+) -> WhatsAppError:
     """Translate a Meta error payload into a typed exception.
+
+    Meta subcodes refine the HTTP status: rate-limit, validation, account,
+    and registration codes map to precise subclasses regardless of status.
 
     Args:
         status_code: HTTP status code.
@@ -88,27 +98,53 @@ def translate_error(
         api_version: Graph API version used.
 
     Returns:
-        Typed :class:`APIError` subclass instance.
+        Typed :class:`WhatsAppError` subclass instance.
     """
     error = payload.get("error", {}) if isinstance(payload, dict) else {}
     message = error.get("message", f"Meta API request failed with status {status_code}.")
     code = error.get("code")
     error_type = error.get("type")
     trace_id = extract_trace_id(headers)
+    subcode = code if isinstance(code, int) else None
     common = {
         "status_code": status_code,
-        "code": code if isinstance(code, int) else None,
+        "code": subcode,
         "error_type": error_type,
         "api_version": api_version,
         "trace_id": trace_id,
         "raw": {"error": error},
     }
-    if status_code == 429:
-        retry_after = parse_retry_after(
-            {key.lower(): value for key, value in headers.items()}.get("retry-after")
+    lowered_headers = {key.lower(): value for key, value in headers.items()}
+    if subcode in _RATE_LIMIT_CODES:
+        return RateLimitError(
+            message,
+            retry_after=parse_retry_after(lowered_headers.get("retry-after")),
+            **common,
         )
-        return RateLimitError(message, retry_after=retry_after, **common)
-    if status_code in (401, 403) and code in (190, 102, 10, 200, 299):
+    if subcode in _VALIDATION_CODES:
+        return ValidationAPIError(
+            message,
+            remediation="Fix the request payload (parameters, template variables, recipients).",
+            **common,
+        )
+    if subcode == 131031:
+        return AuthorizationError(
+            message,
+            remediation="Check WABA restriction status and policy compliance; verify two-step data.",
+            **common,
+        )
+    if subcode == 133010:
+        from whatsloon.exceptions import ConfigurationError
+
+        return ConfigurationError(
+            "Sender phone number is not registered on the WhatsApp Business Platform. "
+            "Register it via POST /{phone-number-id}/register before sending."
+        )
+    if status_code == 429:
+        return RateLimitError(
+            message, retry_after=parse_retry_after(lowered_headers.get("retry-after")), **common
+        )
+    if status_code in (401, 403) and subcode in (190, 102, 10, 200, 299):
         return AuthenticationError(message, **common)
     if status_code in (401, 403):
         return AuthorizationError(message, **common)
