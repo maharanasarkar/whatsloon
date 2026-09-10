@@ -10,6 +10,7 @@ from whatsloon.webhooks.events import (
 from whatsloon.webhooks.filters import SubscriptionFilter
 from whatsloon.webhooks.parser import parse_body, parse_envelope
 from whatsloon.webhooks.processor import (
+    AsyncHandlerInSyncPipeline,
     ProcessResult,
     WebhookProcessor,
     default_tenant_resolver,
@@ -19,6 +20,7 @@ from whatsloon.webhooks.router import EventRouter
 from whatsloon.webhooks.verifier import compute_signature, verify_handshake, verify_signature
 
 __all__ = [
+    "AsyncHandlerInSyncPipeline",
     "EventRouter",
     "NormalizedEvent",
     "ProcessResult",
