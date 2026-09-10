@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from whatsloon.config.capabilities import VersionCapabilities
-from whatsloon.exceptions import APIError
+from whatsloon.exceptions import WhatsAppError
 
 
 class VersionAdapter(ABC):
@@ -71,7 +71,7 @@ class VersionAdapter(ABC):
         status_code: int,
         payload: dict[str, Any],
         headers: dict[str, str],
-    ) -> APIError:
+    ) -> WhatsAppError:
         """Translate a Meta error with version-specific semantics.
 
         Args:
@@ -80,7 +80,7 @@ class VersionAdapter(ABC):
             headers: Response headers.
 
         Returns:
-            Typed :class:`APIError` subclass instance.
+            Typed :class:`WhatsAppError` subclass instance.
         """
         from whatsloon.transport.base import translate_error
 

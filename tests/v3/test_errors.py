@@ -91,3 +91,54 @@ def test_trace_id_header_variants():
     assert extract_trace_id({"X-Request-Id": "b"}) == "b"
     assert extract_trace_id({"X-Fb-Trace-Id": "c"}) == "c"
     assert extract_trace_id({}) is None
+
+
+def _meta_error(code, message="Failed"):
+    """Build a Meta error payload.
+
+    Args:
+        code: Meta numeric code.
+        message: Error message.
+
+    Returns:
+        Payload mapping.
+    """
+    return {"error": {"message": message, "type": "OAuthException", "code": code}}
+
+
+def test_rate_limit_subcodes_win_over_status():
+    """Throttling subcodes map to RateLimitError on any status."""
+    from whatsloon.exceptions import RateLimitError
+
+    for code in (4, 17, 32, 368, 80007, 130429):
+        err = translate_error(status_code=400, payload=_meta_error(code), headers={})
+        assert isinstance(err, RateLimitError), code
+        assert err.retryable is True
+
+
+def test_validation_subcodes():
+    """Payload-problem subcodes map to ValidationAPIError."""
+    from whatsloon.exceptions import ValidationAPIError
+
+    for code in (100, 131030, 132000, 132001):
+        err = translate_error(status_code=400, payload=_meta_error(code), headers={})
+        assert isinstance(err, ValidationAPIError), code
+        assert err.retryable is False
+
+
+def test_account_lock_maps_to_authorization():
+    """131031 means restricted account, not bad credentials."""
+    from whatsloon.exceptions import AuthorizationError
+
+    err = translate_error(status_code=400, payload=_meta_error(131031), headers={})
+    assert isinstance(err, AuthorizationError)
+    assert "policy" in err.remediation
+
+
+def test_unregistered_number_maps_to_configuration():
+    """133010 means the sender number was never registered."""
+    from whatsloon.exceptions import ConfigurationError
+
+    err = translate_error(status_code=400, payload=_meta_error(133010), headers={})
+    assert isinstance(err, ConfigurationError)
+    assert "register" in str(err).lower()
