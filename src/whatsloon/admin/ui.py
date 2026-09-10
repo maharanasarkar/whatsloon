@@ -997,10 +997,17 @@ def create_ui_router(
             )
         except Exception as exc:
             return _api_error(templates, request, exc, tenant_id, token)
-        return RedirectResponse(
-            url=f"./templates?tenant_id={tenant_id}&token={token}&waba_id={waba_id}",
-            status_code=303,
+        from urllib.parse import quote
+
+        params = "&".join(
+            f"{key}={quote(value, safe='')}"
+            for key, value in (
+                ("tenant_id", tenant_id),
+                ("token", token),
+                ("waba_id", waba_id),
+            )
         )
+        return RedirectResponse(url=f"./templates?{params}", status_code=303)
 
     @router.get("/ui/media", response_class=HTMLResponse)
     def media_page(

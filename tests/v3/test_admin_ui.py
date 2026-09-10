@@ -349,6 +349,8 @@ def test_template_list_and_create():
         follow_redirects=False,
     )
     assert created.status_code == 303
+    assert created.headers["location"].startswith("./templates?")
+    assert "\r" not in created.headers["location"] and "\n" not in created.headers["location"]
 
 
 def test_media_upload_and_groups_list():
