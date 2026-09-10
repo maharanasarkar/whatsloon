@@ -23,6 +23,7 @@ from whatsloon.exceptions import (
     NotFoundError,
     RateLimitError,
     ServerError,
+    TLSProxyError,
     TransportError,
     TransportTimeoutError,
     ValidationAPIError,
@@ -59,7 +60,13 @@ def extract_trace_id(headers: dict[str, str]) -> Optional[str]:
         Trace ID when present, else None.
     """
     lowered = {key.lower(): value for key, value in headers.items()}
-    for candidate in ("x-fb-trace-id", "x-business-use-case-usage", "facebook-api-version"):
+    for candidate in (
+        "x-fb-trace-id",
+        "x-fb-request-id",
+        "x-request-id",
+        "x-business-use-case-usage",
+        "facebook-api-version",
+    ):
         if candidate in lowered:
             return lowered[candidate]
     return None
@@ -129,6 +136,10 @@ def map_httpx_error(error: Exception) -> TransportError:
         return ConnectError()
     if isinstance(error, httpx.TimeoutException):
         return TransportTimeoutError()
+    if isinstance(error, (httpx.ProxyError, httpx.UnsupportedProtocol)) or (
+        type(error).__name__ in ("SSLError", "CertificateError")
+    ):
+        return TLSProxyError()
     if isinstance(error, (httpx.DecodingError, httpx.TooManyRedirects)):
         return TransportError(str(error), retryable=False)
     return TransportError(f"Transport failure: {type(error).__name__}.", retryable=True)
